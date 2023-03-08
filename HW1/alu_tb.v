@@ -14,6 +14,7 @@ module alu_tb (
     reg overflow, ans_overflow;
 
     integer i = 0;
+    /* verilator lint_off UNUSEDSIGNAL */
     integer pattern, temp;
 
     alu alu(
@@ -34,14 +35,14 @@ module alu_tb (
 
     always @(posedge clk) begin
         if ($feof(pattern)) begin
-            finish = 1;
+            finish <= 1;
         end else begin
-            temp = $fscanf(pattern, "%d\n", op);
-            temp = $fscanf(pattern, "%d\n", rs1);
-            temp = $fscanf(pattern, "%d\n", rs2);
-            temp = $fscanf(pattern, "%d\n", ans_rd);
-            temp = $fscanf(pattern, "%d\n", ans_zero);
-            temp = $fscanf(pattern, "%d\n", ans_overflow);
+            temp <= $fscanf(pattern, "%d\n", op);
+            temp <= $fscanf(pattern, "%d\n", rs1);
+            temp <= $fscanf(pattern, "%d\n", rs2);
+            temp <= $fscanf(pattern, "%d\n", ans_rd);
+            temp <= $fscanf(pattern, "%d\n", ans_zero);
+            temp <= $fscanf(pattern, "%d\n", ans_overflow);
         end
     end 
 
@@ -57,7 +58,7 @@ module alu_tb (
         end else begin
             $display("Pass Pattern %d", i);
         end
-        i = i + 1;
+        i <= i + 1;
     end
     
 endmodule
