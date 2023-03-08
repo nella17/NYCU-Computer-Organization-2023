@@ -1,0 +1,4 @@
+*.tgz
+Valu_tb
+obj_dir
+waveform.vcd
