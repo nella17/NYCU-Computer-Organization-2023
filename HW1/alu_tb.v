@@ -48,7 +48,12 @@ module alu_tb (
     always @(negedge clk) begin
         if ((ans_rd !== rd) || (ans_zero !== zero) || (ans_overflow !== overflow)) begin
             $display("Fail Pattern %d", i);
-            $finish(); $finish();
+            $display("  %d %d %d", op, rs1, rs2);
+            $display("      ans / output");
+            $display("  rd: %d / %d", ans_rd, rd);
+            $display("  zo: %d / %d", ans_zero, zero);
+            $display("  of: %d / %d", ans_overflow, overflow);
+            // $finish(); $finish();
         end else begin
             $display("Pass Pattern %d", i);
         end
