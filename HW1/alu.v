@@ -8,7 +8,22 @@ module alu #(parameter DWIDTH = 32)
     output overflow             // overflow = 1 if overflow happens.
 );
 
-    assign zero = rd == 0;
+    reg valid;
+    always @(*) begin
+        casez (op)
+            4'b0000,
+            4'b0001,
+            4'b0010,
+            4'b0110,
+            4'b1100,
+            4'b0111:
+                valid = 1;
+            default:
+                valid = 0;
+        endcase
+    end
+
+    assign zero = valid && rd == 0;
 
     always @(*) begin
         casez (op)
@@ -17,7 +32,7 @@ module alu #(parameter DWIDTH = 32)
             4'b0010: rd = rs1 + rs2;
             4'b0110: rd = rs1 - rs2;
             4'b1100: rd = ~(rs1 | rs2);
-            4'b0111: rd = { DWIDTH{ rs1 < rs2 } };
+            4'b0111: rd = rs1 < rs2 ? 32'h1 : 32'h0;
             default: rd = 0;
         endcase
     end
