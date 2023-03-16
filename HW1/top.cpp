@@ -14,7 +14,7 @@ int main() {
     dut->clk = 1;
     m_trace->open("waveform.vcd"); // open a waveform file to be write
 
-    while (sim_time < MAX_SIM_TIME) {
+    while (true) {
         dut->clk ^= 1;             // tick the clock
         dut->eval();               // do evaluation
         m_trace->dump(sim_time);   // dump simulation result into vcd file.

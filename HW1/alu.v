@@ -1,3 +1,10 @@
+`define OP_AND 4'b0000
+`define OP_OR  4'b0001
+`define OP_ADD 4'b0010
+`define OP_SUB 4'b0110
+`define OP_NOR 4'b1100
+`define OP_SLT 4'b0111
+
 module alu #(parameter DWIDTH = 32)
 (
     input [3 : 0] op,           // Operation to perform.
@@ -11,12 +18,12 @@ module alu #(parameter DWIDTH = 32)
     reg valid;
     always @(*) begin
         casez (op)
-            4'b0000,
-            4'b0001,
-            4'b0010,
-            4'b0110,
-            4'b1100,
-            4'b0111:
+            `OP_AND,
+            `OP_OR ,
+            `OP_ADD,
+            `OP_SUB,
+            `OP_NOR,
+            `OP_SLT:
                 valid = 1;
             default:
                 valid = 0;
@@ -27,21 +34,21 @@ module alu #(parameter DWIDTH = 32)
 
     always @(*) begin
         casez (op)
-            4'b0000: rd = rs1 & rs2;
-            4'b0001: rd = rs1 | rs2;
-            4'b0010: rd = rs1 + rs2;
-            4'b0110: rd = rs1 - rs2;
-            4'b1100: rd = ~(rs1 | rs2);
-            4'b0111: rd = rs1 < rs2 ? 32'h1 : 32'h0;
+            `OP_AND: rd = rs1 & rs2;
+            `OP_OR : rd = rs1 | rs2;
+            `OP_ADD: rd = rs1 + rs2;
+            `OP_SUB: rd = rs1 - rs2;
+            `OP_NOR: rd = ~(rs1 | rs2);
+            `OP_SLT: rd = { {(DWIDTH-1){ 1'h0 }}, rs1 < rs2 };
             default: rd = 0;
         endcase
     end
 
     always @(*) begin
         casez (op)
-            4'b0010:
+            `OP_ADD:
                 overflow = (rs1 >= 0 && rs2 >= 0 && rd < 0) || (rs1 < 0 && rs2 < 0 && rd >= 0);
-            4'b0110:
+            `OP_SUB:
                 overflow = (rs1 >= 0 && rs2 < 0 && rd < 0) || (rs1 < 0 && rs2 >= 0 && rd >= 0);
             default:
                 overflow = 0;

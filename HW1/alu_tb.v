@@ -54,7 +54,7 @@ module alu_tb (
             $display("  rd: %d / %d", ans_rd, rd);
             $display("  zo: %d / %d", ans_zero, zero);
             $display("  of: %d / %d", ans_overflow, overflow);
-            // $finish(); $finish();
+            $finish(); $finish();
         end else begin
             $display("Pass Pattern %d", i);
         end
