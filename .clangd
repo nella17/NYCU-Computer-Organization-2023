@@ -1,0 +1,4 @@
+If:
+    PathMatch: .*\.[ch]pp
+CompileFlags:
+    Add: [-I/opt/homebrew/Cellar/verilator/5.006/share/verilator/include, -I/opt/homebrew/Cellar/verilator/5.006/share/verilator/include/vltstd, -std=gnu++17, -Wall, -Wextra, -Wshadow, -Wconversion]
