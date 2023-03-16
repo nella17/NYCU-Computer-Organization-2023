@@ -23,5 +23,6 @@ for line in lines:
         rd = TYPE(rrd).value
         zero = rd == 0
         overflow = rrd != rd
+        if overflow: zero = 0
     if rd != ans_rd or zero != ans_zero or overflow != ans_overflow:
         print(line, rd, zero, overflow)

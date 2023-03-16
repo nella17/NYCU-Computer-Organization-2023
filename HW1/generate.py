@@ -36,6 +36,7 @@ for i in range(CNT):
         ans_rd = TYPE(rd).value
         ans_zero = int(ans_rd == 0)
         ans_overflow = int(ans_rd != rd)
+        if ans_overflow: ans_zero = 0
 
     print(f'{op} {rs1} {rs2} {ans_rd} {ans_zero} {ans_overflow}')
 

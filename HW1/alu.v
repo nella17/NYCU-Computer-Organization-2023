@@ -30,7 +30,7 @@ module alu #(parameter DWIDTH = 32)
         endcase
     end
 
-    assign zero = valid && rd == 0;
+    assign zero = valid && ~overflow && rd == 0;
 
     always @(*) begin
         casez (op)
