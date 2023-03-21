@@ -1,8 +1,3 @@
-/*
- *    Author : Che-Yu Wu @ EISL
- *    Date   : 2022-03-30
- */
-
 module reg_file #(parameter DWIDTH = 32)
 (
     input                 clk,      // system clock
@@ -19,6 +14,18 @@ module reg_file #(parameter DWIDTH = 32)
     output [DWIDTH-1 : 0] rs2       // register operand #2 (if any)
 );
 
-reg [DWIDTH-1:0] R[0:31];
+    reg [DWIDTH-1:0] R[0:31];
+
+    assign rs1 = R [ rs1_id ];
+    assign rs2 = R [ rs2_id ];
+
+
+    always @(posedge clk) begin
+        if (we) begin
+            if (rdst_id != 0) begin
+                R[ rdst_id ] = rdst;
+            end
+        end
+    end
 
 endmodule
