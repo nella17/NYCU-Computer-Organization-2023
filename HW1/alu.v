@@ -18,12 +18,12 @@ module alu #(parameter DWIDTH = 32)
     reg valid;
     always @(*) begin
         casez (op)
-            `OP_AND,
-            `OP_OR ,
-            `OP_ADD,
-            `OP_SUB,
-            `OP_NOR,
-            `OP_SLT:
+            OP_AND,
+            OP_OR ,
+            OP_ADD,
+            OP_SUB,
+            OP_NOR,
+            OP_SLT:
                 valid = 1;
             default:
                 valid = 0;
@@ -34,21 +34,21 @@ module alu #(parameter DWIDTH = 32)
 
     always @(*) begin
         casez (op)
-            `OP_AND: rd = rs1 & rs2;
-            `OP_OR : rd = rs1 | rs2;
-            `OP_ADD: rd = rs1 + rs2;
-            `OP_SUB: rd = rs1 - rs2;
-            `OP_NOR: rd = ~(rs1 | rs2);
-            `OP_SLT: rd = { {(DWIDTH-1){ 1'h0 }}, rs1 < rs2 };
+            OP_AND: rd = rs1 & rs2;
+            OP_OR : rd = rs1 | rs2;
+            OP_ADD: rd = rs1 + rs2;
+            OP_SUB: rd = rs1 - rs2;
+            OP_NOR: rd = ~(rs1 | rs2);
+            OP_SLT: rd = { {(DWIDTH-1){ 1'h0 }}, rs1 < rs2 };
             default: rd = 0;
         endcase
     end
 
     always @(*) begin
         casez (op)
-            `OP_ADD:
+            OP_ADD:
                 overflow = (rs1 >= 0 && rs2 >= 0 && rd < 0) || (rs1 < 0 && rs2 < 0 && rd >= 0);
-            `OP_SUB:
+            OP_SUB:
                 overflow = (rs1 >= 0 && rs2 < 0 && rd < 0) || (rs1 < 0 && rs2 >= 0 && rd >= 0);
             default:
                 overflow = 0;
