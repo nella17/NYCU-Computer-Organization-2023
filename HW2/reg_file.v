@@ -20,10 +20,14 @@ module reg_file #(parameter DWIDTH = 32)
     assign rs2 = R [ rs2_id ];
 
 
+    integer i;
     always @(posedge clk) begin
-        if (we) begin
+        if (rst)
+            for (i = 0; i < DWIDTH; i++)
+                R[i] <= 32'h0;
+        else if (we) begin
             if (rdst_id != 0) begin
-                R[ rdst_id ] = rdst;
+                R[ rdst_id ] <= rdst;
             end
         end
     end
