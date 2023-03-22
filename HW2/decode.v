@@ -1,8 +1,3 @@
-/*
- *    Author : Che-Yu Wu @ EISL
- *    Date   : 2022-03-30
- */
-
 module decode #(parameter DWIDTH = 32)
 (
     input [DWIDTH-1:0]  instr,   // Input instruction.
@@ -35,5 +30,62 @@ module decode #(parameter DWIDTH = 32)
                      OP_SLT = 4'b0111,
                      OP_NOT_DEFINED = 4'b1111;
 
+    wire [5:0] opcode, funct;
+    wire [4:0] rs, rt, rd, shamt;
+    wire [15:0] immediate;
+    wire [25:0] address;
+
+    assign { opcode, rs, rt, rd, shamt, funct } = instr;
+    assign immediate = ssel ? 0 : instr[15:0];
+    assign address = instr[25:0];
+
+    assign rs1_id = rs;
+    assign rs2_id = rt;
+    assign imm = { {16{ immediate[15] }},  immediate };
+
+    always @ (*) begin
+        casez (opcode)
+            6'h0: begin
+                rdst_id = rd;
+                ssel = 1;
+                casez (funct)
+                    6'h20: begin // add
+                        op = OP_ADD;
+                    end
+                    6'h22: begin // sub
+                        op = OP_SUB;
+                    end
+                    6'h24: begin // and
+                        op = OP_AND;
+                    end
+                    6'h25: begin // or
+                        op = OP_OR;
+                    end
+                    6'h27: begin // nor
+                        op = OP_NOR;
+                    end
+                    6'h2a: begin // slt
+                        op = OP_SLT;
+                    end
+                    default: begin
+                        op = OP_NOT_DEFINED;
+                    end
+                endcase
+            end
+            6'h8: begin // addi
+                rdst_id = rt;
+                ssel = 0;
+                op = OP_ADD;
+            end
+            6'hA: begin // slti
+                rdst_id = rt;
+                ssel = 0;
+                op = OP_SLT;
+            end
+            default: begin
+                op = OP_NOT_DEFINED;
+            end
+        endcase
+    end
 
 endmodule
