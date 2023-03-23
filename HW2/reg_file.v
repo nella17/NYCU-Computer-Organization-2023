@@ -23,8 +23,8 @@ module reg_file #(parameter DWIDTH = 32)
     integer i;
     always @(posedge clk) begin
         if (rst)
-            for (i = 0; i < DWIDTH; i++)
-                R[i] <= 32'h0;
+            for (i = 0; i < 32; i++)
+                R[i] <= 0;
         else if (we) begin
             if (rdst_id != 0) begin
                 R[ rdst_id ] <= rdst;
