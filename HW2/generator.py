@@ -198,4 +198,7 @@ with open('./reg_file.txt', 'w') as f:
     f.write(' '.join(map(str, regs)))
 
 with open('./debug.txt', 'w') as f:
+    f.write(f'count = {count}\n')
+    f.write(f'seed = {seed}\n')
+    f.write(f'\n')
     f.write(debug)
