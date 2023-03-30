@@ -35,13 +35,17 @@ module decode #(parameter DWIDTH = 32)
     wire [15:0] immediate;
     wire [25:0] address;
 
-    assign { opcode, rs, rt, rd, shamt, funct } = instr;
-    assign immediate = ssel ? 0 : instr[15:0];
-    assign address = instr[25:0];
+    assign { opcode, address } = instr;
+    assign { rs, rt, immediate } = address;
+    assign { rd, shamt, funct } = immediate;
+
+    // assign { opcode, rs, rt, rd, shamt, funct } = instr;
+    // assign immediate = ssel ? 0 : instr[15:0];
+    // assign address = instr[25:0];
 
     assign rs1_id = rs;
     assign rs2_id = rt;
-    assign imm = { {16{ immediate[15] }},  immediate };
+    assign imm = ssel ? 0 : { {16{ immediate[15] }},  immediate };
 
     always @ (*) begin
         casez (opcode)
