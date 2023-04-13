@@ -8,7 +8,12 @@ module decode #(parameter DWIDTH = 32)
     output reg [DWIDTH-1:0] imm,     // The immediate value (if used).
     output reg [4 : 0]      rs1_id,  // register ID for rs.
     output reg [4 : 0]      rs2_id,  // register ID for rt (if used).
-    output reg [4 : 0]      rdst_id // register ID for rd or rt (if used).
+    output reg [4 : 0]      rdst_id, // register ID for rd or rt (if used).
+
+    output reg jump_type,
+    output reg jump_addr,
+    output reg we_regfile,
+    output reg we_dmem
 );
 
 /***************************************************************************************
