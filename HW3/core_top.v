@@ -12,8 +12,25 @@ module core_top #(
                      J_TYPE_JR  = 3'b011,
                      J_TYPE_J   = 3'b100;
 
-    // Program Counter signals
+    // imm
     reg  [DWIDTH-1:0] pc;
+    wire [DWIDTH-1:0] instr;
+    // decode
+    wire [2:0] jump_type;
+    wire [DWIDTH-7:0] jump_addr;
+    wire we_regfile, we_dmem, sel_dmem;
+    wire [3:0] op;
+    wire ssel;
+    wire [DWIDTH-1:0] imm;
+    wire [4:0] rs1_id, rs2_id, rdst_id;
+    // reg
+    wire [DWIDTH-1:0] rdst, rs1, rs2;
+    reg  [DWIDTH-1:0] rs, rt;
+    // alu
+    wire [DWIDTH-1:0] rd;
+    wire zero, overflow;
+    // dmem
+    wire [DWIDTH-1:0] wdata, rdata;
 
     always @(posedge clk) begin
         if (rst)
@@ -21,64 +38,65 @@ module core_top #(
     end
     
     imem imem_inst(
-        .addr(),
-        .rdata()
+        .addr(pc),
+        .rdata(instr)
     );
 
     decode decode_inst (
         // input
-        .instr(),
+        .instr(instr),
 
         // output  
-        .jump_type(),
-        .jump_addr(),
-        .we_regfile(),
-        .we_dmem(),
+        .jump_type(jump_type),
+        .jump_addr(jump_addr),
+        .we_regfile(we_regfile),
+        .we_dmem(we_dmem),
+        .sel_dmem(sel_dmem),
 
-        .op(),
-        .ssel(),
-        .imm(),
-        .rs1_id(),
-        .rs2_id(),
-        .rdst_id()
+        .op(op),
+        .ssel(ssel),
+        .imm(imm),
+        .rs1_id(rs1_id),
+        .rs2_id(rs2_id),
+        .rdst_id(rdst_id)
     );
 
     reg_file reg_file_inst (
         // input
-        .clk(),
-        .rst(),
+        .clk(clk),
+        .rst(rst),
 
-        .rs1_id(),
-        .rs2_id(),
+        .rs1_id(rs1_id),
+        .rs2_id(rs2_id),
 
-        .we(),
-        .rdst_id(),
-        .rdst(),
+        .we(we_regfile),
+        .rdst_id(rdst_id),
+        .rdst(rdst),
 
         // output 
-        .rs1(), // rs
-        .rs2()  // rt
+        .rs1(rs1), // rs
+        .rs2(rs2)  // rt
     );
 
     alu alu_inst (
         // input
-        .op(),
-        .rs1(),
-        .rs2(),
+        .op(op),
+        .rs1(rs1),
+        .rs2(rt),
 
         // output
-        .rd(),
-        .zero(),
-        .overflow()
+        .rd(rd),
+        .zero(zero),
+        .overflow(overflow)
     );
 
     // Dmem
     dmem dmem_inst (
-        .clk(),
+        .clk(clk),
         .addr(),
-        .we(),
-        .wdata(),
-        .rdata()
+        .we(we_dmem),
+        .wdata(wdata),
+        .rdata(rdata)
     );
 
 endmodule

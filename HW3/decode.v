@@ -2,18 +2,19 @@ module decode #(parameter DWIDTH = 32)
 (
     input [DWIDTH-1:0]  instr,   // Input instruction.
 
+    output reg [2 : 0]      jump_type,
+    output reg [DWIDTH-7:0] jump_addr,
+    output reg we_regfile,
+    output reg we_dmem,
+    output reg sel_dmem,
+
     output reg [3 : 0]      op,      // Operation code for the ALU.
     output reg              ssel,    // Select the signal for either the immediate value or rs2.
 
     output reg [DWIDTH-1:0] imm,     // The immediate value (if used).
     output reg [4 : 0]      rs1_id,  // register ID for rs.
     output reg [4 : 0]      rs2_id,  // register ID for rt (if used).
-    output reg [4 : 0]      rdst_id, // register ID for rd or rt (if used).
-
-    output reg jump_type,
-    output reg jump_addr,
-    output reg we_regfile,
-    output reg we_dmem
+    output reg [4 : 0]      rdst_id  // register ID for rd or rt (if used).
 );
 
 /***************************************************************************************
