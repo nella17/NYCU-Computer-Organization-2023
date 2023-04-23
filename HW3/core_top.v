@@ -14,6 +14,7 @@ module core_top #(
 
     // imm
     reg  [DWIDTH-1:0] pc;
+    wire [DWIDTH-1:0] npc;
     wire [DWIDTH-1:0] instr;
     // decode
     wire [2:0] jump_type;
@@ -32,11 +33,34 @@ module core_top #(
     // dmem
     wire [DWIDTH-1:0] wdata, rdata;
 
+    assign npc = pc + 4;
     always @(posedge clk) begin
         if (rst)
             pc <= 0;
+        else
+            casez (jump_type)
+                J_TYPE_NOP:
+                    pc <= npc;
+                J_TYPE_BEQ:
+                    pc <= npc + (rs == rt ? imm * 4 : 0);
+                J_TYPE_JAL,
+                J_TYPE_J:
+                    pc <= { pc[31:28], jump_addr, 2'h0 };
+                J_TYPE_JR:
+                    pc <= rs;
+                default:
+                    pc <= pc;
+            endcase
     end
-    
+
+    // TODO: ??
+    assign rs = rs1;
+    assign rt = jump_type == J_TYPE_JAL ? npc :
+                ~ssel && jump_type != J_TYPE_BEQ ? imm :
+                    rs2;
+    assign rdst = ~sel_dmem ? rdata : rd;
+    assign wdata = rs2;
+
     imem imem_inst(
         .addr(pc),
         .rdata(instr)
@@ -93,7 +117,7 @@ module core_top #(
     // Dmem
     dmem dmem_inst (
         .clk(clk),
-        .addr(),
+        .addr(rd),
         .we(we_dmem),
         .wdata(wdata),
         .rdata(rdata)
