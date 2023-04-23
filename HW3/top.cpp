@@ -17,7 +17,7 @@ int main() {
     m_trace->open("waveform.vcd"); // open a waveform file to be write
 #endif
 
-    int reset_counter = 5;
+    int reset_counter = 1;
     dut->clk = 1;
     dut->rst = 0;
 
