@@ -135,6 +135,10 @@ module decode #(parameter DWIDTH = 32)
             OPCODE_SLTI,
             OPCODE_LW  :
                         rdst_id = rt;
+            OPCODE_SW  ,
+            OPCODE_BEQ ,
+            OPCODE_J   :
+                        rdst_id = 0;
             OPCODE_JAL :
                         rdst_id = 5'd31;
             default:    
