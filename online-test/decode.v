@@ -6,7 +6,7 @@ module decode #(parameter DWIDTH = 32)
     output reg [DWIDTH-7:0] jump_addr,
     output reg we_regfile,
     output reg we_dmem,
-    output reg sel_dmem,
+    output reg [1 : 0] sel_dmem,
 
     output reg [3 : 0]      op,      // Operation code for the ALU.
     output reg              ssel,    // Select the signal for either the immediate value or rs2.
@@ -31,6 +31,7 @@ module decode #(parameter DWIDTH = 32)
     // Jump type
     localparam [2:0] J_TYPE_NOP = 3'b000,
                      J_TYPE_BEQ = 3'b001,
+                     J_TYPE_BGTZ= 3'b101,
                      J_TYPE_JAL = 3'b010,
                      J_TYPE_JR  = 3'b011,
                      J_TYPE_J   = 3'b100;
@@ -42,7 +43,9 @@ module decode #(parameter DWIDTH = 32)
                      OPCODE_SW   = 6'h2b,
                      OPCODE_BEQ  = 6'h04,
                      OPCODE_JAL  = 6'h03,
-                     OPCODE_J    = 6'h02;
+                     OPCODE_J    = 6'h02,
+                     OPCODE_LB   = 6'h20,
+                     OPCODE_BGTZ = 6'h07;
 
     localparam [5:0] REGS_ADD = 6'h20,
                      REGS_SUB = 6'h22,
@@ -114,11 +117,13 @@ module decode #(parameter DWIDTH = 32)
             OPCODE_SLTI: op = OP_SLT;
 
             OPCODE_LW,
+            OPCODE_LB,
             OPCODE_SW:   op = OP_ADD;
 
             OPCODE_J,
             OPCODE_JAL,
-            OPCODE_BEQ: op = OP_OR;
+            OPCODE_BEQ,
+            OPCODE_BGTZ: op = OP_OR;
 
             default: op = OP_NOT_DEFINED;
         endcase
@@ -133,10 +138,12 @@ module decode #(parameter DWIDTH = 32)
                 endcase
             OPCODE_ADDI,
             OPCODE_SLTI,
-            OPCODE_LW  :
+            OPCODE_LW  ,
+            OPCODE_LB  :
                         rdst_id = rt;
             OPCODE_SW  ,
             OPCODE_BEQ ,
+            OPCODE_BGTZ,
             OPCODE_J   :
                         rdst_id = 0;
             OPCODE_JAL :
@@ -148,9 +155,10 @@ module decode #(parameter DWIDTH = 32)
 
     always @ (*) begin
         casez (opcode)
-            OPCODE_SW ,
-            OPCODE_BEQ,
-            OPCODE_J  :
+            OPCODE_SW  ,
+            OPCODE_BEQ ,
+            OPCODE_BGTZ,
+            OPCODE_J   :
                         we_regfile = 0;
             default:    we_regfile = 1;
         endcase
@@ -168,8 +176,10 @@ module decode #(parameter DWIDTH = 32)
         casez (opcode)
             OPCODE_LW ,
             OPCODE_SW :
-                        sel_dmem = 0;
-            default:    sel_dmem = 1;
+                        sel_dmem = 1;
+            OPCODE_LB :
+                        sel_dmem = 2;
+            default:    sel_dmem = 0;
         endcase
     end
 
@@ -183,6 +193,7 @@ module decode #(parameter DWIDTH = 32)
             OPCODE_J:   jump_type = J_TYPE_J;
             OPCODE_JAL: jump_type = J_TYPE_JAL;
             OPCODE_BEQ: jump_type = J_TYPE_BEQ;
+            OPCODE_BGTZ:jump_type = J_TYPE_BGTZ;
             default:    jump_type = J_TYPE_NOP;
         endcase
     end

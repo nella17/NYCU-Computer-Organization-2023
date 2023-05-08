@@ -8,6 +8,7 @@ module core_top #(
     // Jump type
     localparam [2:0] J_TYPE_NOP = 3'b000,
                      J_TYPE_BEQ = 3'b001,
+                     J_TYPE_BGTZ= 3'b101,
                      J_TYPE_JAL = 3'b010,
                      J_TYPE_JR  = 3'b011,
                      J_TYPE_J   = 3'b100;
@@ -19,19 +20,21 @@ module core_top #(
     // decode
     wire [2:0] jump_type;
     wire [DWIDTH-7:0] jump_addr;
-    wire we_regfile, we_dmem, sel_dmem;
+    wire we_regfile, we_dmem;
+    wire [1:0] sel_dmem;
     wire [3:0] op;
     wire ssel;
     wire [DWIDTH-1:0] imm;
     wire [4:0] rs1_id, rs2_id, rdst_id;
     // reg
-    wire [DWIDTH-1:0] rdst, rs1, rs2;
+    reg [DWIDTH-1:0] rdst;
+    wire [DWIDTH-1:0] rs1, rs2;
     reg  [DWIDTH-1:0] rs, rt;
     // alu
     wire [DWIDTH-1:0] rd;
     wire zero, overflow;
     // dmem
-    wire [DWIDTH-1:0] wdata, rdata;
+    wire [DWIDTH-1:0] wdata, rdata, rdata_byte;
 
     assign npc = pc + 4;
     always @(posedge clk) begin
@@ -43,6 +46,8 @@ module core_top #(
                     pc <= npc;
                 J_TYPE_BEQ:
                     pc <= npc + (rs == rt ? imm * 4 : 0);
+                J_TYPE_BGTZ:
+                    pc <= npc + ($signed(rs) >= 0 ? imm * 4 : 0);
                 J_TYPE_JAL,
                 J_TYPE_J:
                     pc <= { pc[31:28], jump_addr, 2'h0 };
@@ -58,7 +63,14 @@ module core_top #(
     assign rt = jump_type == J_TYPE_JAL ? npc :
                 ~ssel && jump_type != J_TYPE_BEQ ? imm :
                     rs2;
-    assign rdst = ~sel_dmem ? rdata : rd;
+    always @ (*) begin
+        casez (sel_dmem)
+            0: rdst = rd;
+            1: rdst = rdata;
+            2: rdst = rdata_byte;
+            default: rdst = 0;
+        endcase
+    end
     assign wdata = rs2;
 
     imem imem_inst(
@@ -120,7 +132,8 @@ module core_top #(
         .addr(rd),
         .we(we_dmem),
         .wdata(wdata),
-        .rdata(rdata)
+        .rdata(rdata),
+        .rdata_byte(rdata_byte)
     );
 
 endmodule
