@@ -1,4 +1,4 @@
-SRC = hw4_tb.v alu.v decode.v dmem.v imem.v reg_file.v
+SRC = hw4_tb.v alu.v decode.v dmem.v imem.v reg_file.v hazard_ctrl.v
 OUT = Vhw4_tb
 
 all:

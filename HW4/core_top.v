@@ -1,3 +1,13 @@
+`define PIPE(clk, ctrl, out, in)    \
+    always @(posedge clk) begin     \
+        casez (ctrl)                \
+            C_PIPE : out <= in;     \
+            C_FLUSH: out <= 0;      \
+            C_STALL: out <= out;    \
+            default: out <= out;    \
+        endcase                     \
+    end
+
 module core_top #(
     parameter DWIDTH = 32
 )(
@@ -5,6 +15,10 @@ module core_top #(
     input                 rst
 );
 
+
+    localparam [1:0] C_PIPE  = 2'b00,
+                     C_FLUSH = 2'b10,
+                     C_STALL = 2'b01;
     // Jump type
     localparam [2:0] J_TYPE_NOP = 3'b000,
                      J_TYPE_BEQ = 3'b001,
@@ -59,15 +73,38 @@ module core_top #(
     reg  [4:0] wb_rdst_id;
     reg  [DWIDTH-1:0] wb_rdst;
 
+    wire [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl;
+    hazard_ctrl hazard_ctrl_inst(
+        .rst(rst),
+
+        .id_rs1_id  (id_rs1_id  ),
+        .id_rs2_id  (id_rs2_id  ),
+        .ex_rdst_id (ex_rdst_id ),
+        .mem_rdst_id(mem_rdst_id),
+        .wb_rdst_id (wb_rdst_id ),
+
+        .if_ctrl (if_ctrl ),
+        .id_ctrl (id_ctrl ),
+        .ex_ctrl (ex_ctrl ),
+        .mem_ctrl(mem_ctrl)
+    );
 
     assign if_npc = if_pc + 4;
+
     always @(posedge clk) begin
-        if (rst)
-            if_pc <= 0;
-        else if (ex_jump_type != J_TYPE_NOP)
-            if_pc <= ex_pc;
-        else
-            if_pc <= if_npc;
+        casez (if_ctrl)
+            C_PIPE :
+                if (ex_jump_type != J_TYPE_NOP)
+                    if_pc <= ex_pc;
+                else
+                    if_pc <= if_npc;
+            C_FLUSH:
+                if_pc <= 0;
+            C_STALL:
+                if_pc <= if_pc;
+            default:
+                if_pc <= if_pc;
+        endcase
     end
 
     imem imem_inst(
@@ -75,10 +112,8 @@ module core_top #(
         .rdata(if_instr)
     );
 
-    always @(posedge clk) begin
-        id_npc      <= rst ? 0 : if_npc;
-        id_instr    <= rst ? 0 : if_instr;
-    end
+    `PIPE(clk, id_ctrl, id_npc,   if_npc  );
+    `PIPE(clk, id_ctrl, id_instr, if_instr);
 
     decode decode_inst (
         // input
@@ -116,20 +151,18 @@ module core_top #(
         .rs2(id_rs2)  // rt
     );
 
-    always @(posedge clk) begin
-        ex_npc          <= rst ? 0 : id_npc;
-        ex_jump_type    <= rst ? 0 : id_jump_type;
-        ex_jump_addr    <= rst ? 0 : id_jump_addr;
-        ex_we_regfile   <= rst ? 0 : id_we_regfile;
-        ex_we_dmem      <= rst ? 0 : id_we_dmem;
-        ex_sel_dmem     <= rst ? 0 : id_sel_dmem;
-        ex_ssel         <= rst ? 0 : id_ssel;
-        ex_op           <= rst ? 0 : id_op;
-        ex_imm          <= rst ? 0 : id_imm;
-        ex_rdst_id      <= rst ? 0 : id_rdst_id;
-        ex_rs1          <= rst ? 0 : id_rs1;
-        ex_rs2          <= rst ? 0 : id_rs2;
-    end
+    `PIPE(clk, ex_ctrl, ex_npc       , id_npc        );
+    `PIPE(clk, ex_ctrl, ex_jump_type , id_jump_type  );
+    `PIPE(clk, ex_ctrl, ex_jump_addr , id_jump_addr  );
+    `PIPE(clk, ex_ctrl, ex_we_regfile, id_we_regfile );
+    `PIPE(clk, ex_ctrl, ex_we_dmem   , id_we_dmem    );
+    `PIPE(clk, ex_ctrl, ex_sel_dmem  , id_sel_dmem   );
+    `PIPE(clk, ex_ctrl, ex_ssel      , id_ssel       );
+    `PIPE(clk, ex_ctrl, ex_op        , id_op         );
+    `PIPE(clk, ex_ctrl, ex_imm       , id_imm        );
+    `PIPE(clk, ex_ctrl, ex_rdst_id   , id_rdst_id    );
+    `PIPE(clk, ex_ctrl, ex_rs1       , id_rs1        );
+    `PIPE(clk, ex_ctrl, ex_rs2       , id_rs2        );
 
     always @(posedge clk) begin
         if (rst) begin
@@ -169,14 +202,12 @@ module core_top #(
         .overflow(ex_overflow)
     );
 
-    always @(posedge clk) begin
-        mem_we_regfile  <= rst ? 0 : ex_we_regfile;
-        mem_we_dmem     <= rst ? 0 : ex_we_dmem;
-        mem_sel_dmem    <= rst ? 0 : ex_sel_dmem;
-        mem_rdst_id     <= rst ? 0 : ex_rdst_id;
-        mem_rs2         <= rst ? 0 : ex_rs2;
-        mem_rd          <= rst ? 0 : ex_rd;
-    end
+    `PIPE(clk, mem_ctrl, mem_we_regfile, ex_we_regfile );
+    `PIPE(clk, mem_ctrl, mem_we_dmem   , ex_we_dmem    );
+    `PIPE(clk, mem_ctrl, mem_sel_dmem  , ex_sel_dmem   );
+    `PIPE(clk, mem_ctrl, mem_rdst_id   , ex_rdst_id    );
+    `PIPE(clk, mem_ctrl, mem_rs2       , ex_rs2        );
+    `PIPE(clk, mem_ctrl, mem_rd        , ex_rd         );
 
     assign mem_rdst = ~mem_sel_dmem ? mem_rdata : mem_rd;
     assign mem_wdata = mem_rs2;

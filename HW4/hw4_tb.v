@@ -13,7 +13,7 @@ module hw4_tb (
 
     integer i, tmp, cycle_count;
 
-    integer cycle_for_ans = 8;
+    integer cycle_for_ans = 40;
     reg [31:0] golden_reg[0:31];
     reg [31:0] golden_dmem[0:15];
 
