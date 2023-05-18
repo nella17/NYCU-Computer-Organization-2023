@@ -123,6 +123,7 @@ module core_top #(
     );
 
     always @(posedge clk) begin
+        ex_pc           <= id_pc;
         ex_jump_type    <= id_jump_type;
         ex_jump_addr    <= id_jump_addr;
         ex_we_regfile   <= id_we_regfile;
