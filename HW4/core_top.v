@@ -32,7 +32,7 @@ module core_top #(
     wire [DWIDTH-1:0] if_instr;
 
     // ID
-    reg  [DWIDTH-1:0] id_npc;
+    reg  [DWIDTH-1:0] id_pc, id_npc;
     reg  [DWIDTH-1:0] id_instr;
     // ID decode
     wire [2:0] id_jump_type;
@@ -45,7 +45,7 @@ module core_top #(
     wire [DWIDTH-1:0] id_rs1, id_rs2;
 
     // EX
-    reg  [DWIDTH-1:0] ex_pc, ex_npc;
+    reg  [DWIDTH-1:0] ex_pc, ex_npc, ex_jpc;
     reg  [2:0] ex_jump_type;
     reg  [DWIDTH-7:0] ex_jump_addr;
     reg  ex_we_regfile, ex_we_dmem, ex_sel_dmem, ex_ssel;
@@ -83,6 +83,10 @@ module core_top #(
         .mem_rdst_id(mem_rdst_id),
         .wb_rdst_id (wb_rdst_id ),
 
+        .ex_jump_type(ex_jump_type),
+        .id_pc(id_pc),
+        .ex_pc(ex_pc),
+
         .if_ctrl (if_ctrl ),
         .id_ctrl (id_ctrl ),
         .ex_ctrl (ex_ctrl ),
@@ -95,7 +99,7 @@ module core_top #(
         casez (if_ctrl)
             C_PIPE :
                 if (ex_jump_type != J_TYPE_NOP)
-                    if_pc <= ex_pc;
+                    if_pc <= ex_jpc;
                 else
                     if_pc <= if_npc;
             C_FLUSH:
@@ -112,7 +116,8 @@ module core_top #(
         .rdata(if_instr)
     );
 
-    `PIPE(clk, id_ctrl, id_npc,   if_npc  );
+    `PIPE(clk, id_ctrl, id_pc   , if_pc   );
+    `PIPE(clk, id_ctrl, id_npc  , if_npc  );
     `PIPE(clk, id_ctrl, id_instr, if_instr);
 
     decode decode_inst (
@@ -151,6 +156,7 @@ module core_top #(
         .rs2(id_rs2)  // rt
     );
 
+    `PIPE(clk, ex_ctrl, ex_pc        , id_pc         );
     `PIPE(clk, ex_ctrl, ex_npc       , id_npc        );
     `PIPE(clk, ex_ctrl, ex_jump_type , id_jump_type  );
     `PIPE(clk, ex_ctrl, ex_jump_addr , id_jump_addr  );
@@ -166,20 +172,20 @@ module core_top #(
 
     always @(posedge clk) begin
         if (rst) begin
-            ex_pc <= 0;
+            ex_jpc <= 0;
         end else begin
             casez (ex_jump_type)
                 J_TYPE_NOP:
-                    ex_pc <= ex_npc;
+                    ex_jpc <= ex_npc;
                 J_TYPE_BEQ:
-                    ex_pc <= ex_npc + (ex_rs == ex_rt ? ex_imm * 4 : 0);
+                    ex_jpc <= ex_npc + (ex_rs == ex_rt ? ex_imm * 4 : 0);
                 J_TYPE_JAL,
                 J_TYPE_J:
-                    ex_pc <= { ex_npc[31:28], ex_jump_addr, 2'h0 };
+                    ex_jpc <= { ex_npc[31:28], ex_jump_addr, 2'h0 };
                 J_TYPE_JR:
-                    ex_pc <= ex_rs;
+                    ex_jpc <= ex_rs;
                 default:
-                    ex_pc <= ex_npc;
+                    ex_jpc <= ex_npc;
             endcase
         end
     end
