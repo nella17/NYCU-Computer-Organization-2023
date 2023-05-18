@@ -6,7 +6,7 @@ module dmem (
     output [31 : 0] rdata  // read data
 );
 
-    reg [31 : 0] RAM [15 : 0];
+    reg [31 : 0] RAM [15 : 0] /* verilator public */ ;
 
     integer idx;
 
