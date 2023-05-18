@@ -13,7 +13,6 @@ module core_top #(
                      J_TYPE_J   = 3'b100;
 
     // IF imem
-    reg  start;
     reg  [DWIDTH-1:0] if_pc;
     wire [DWIDTH-1:0] if_npc;
     wire [DWIDTH-1:0] if_instr;
@@ -59,13 +58,8 @@ module core_top #(
     reg  [4:0] wb_rdst_id;
     reg  [DWIDTH-1:0] wb_rdst;
 
-    always @(posedge clk)
-        if (rst)
-            start <= 0;
-        else
-            start <= 1;
 
-    assign if_npc = if_pc + (start ? 4 : 0);
+    assign if_npc = if_pc + 4;
     always @(posedge clk) begin
         if (rst)
             if_pc <= 0;
