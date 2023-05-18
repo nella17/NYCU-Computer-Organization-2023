@@ -13,7 +13,14 @@ vluint64_t sim_time = 0;
 
 Vhw3_tb *dut;
 
-int main() {
+int main(int argc, char* const argv[]) {
+    bool single = argc > 1;
+    int testcase = -1;
+    if (single) {
+        printf("test > ");
+        scanf("%d", &testcase);
+    }
+
 #ifdef TRACE
     Verilated::traceEverOn(true);
     VerilatedVcdC *m_trace = new VerilatedVcdC;
@@ -58,7 +65,7 @@ int main() {
             unsigned int temp;
             fs >> temp;
             // printf("instr[%d]=%x\n", k, temp);
-            dut->hw3_tb->core_top_inst->imem_inst->RAM[k] = temp;
+            dut->hw3_tb->write_imem(k, temp);
         }
 
 
@@ -67,7 +74,7 @@ int main() {
             unsigned int temp;
             fs >> temp;
             // printf("init_dmem[%d]=%x\n", k, temp);
-            dut->hw3_tb->core_top_inst->dmem_inst->RAM[k] = temp;
+            dut->hw3_tb->write_dmem(k, temp);
         }
 
         // read file - final register file
@@ -75,7 +82,7 @@ int main() {
             unsigned int temp;
             fs >> temp;
             // printf("golden_reg[%d]=%d\n", k, temp);
-            dut->hw3_tb->golden_reg[k] = temp;
+            dut->hw3_tb->write_golden_reg(k, temp);
         }
 
         // read file - final dmem
@@ -83,8 +90,10 @@ int main() {
             unsigned int temp;
             fs >> temp;
             // printf("golden_dmem[%d]=%x\n", k, temp);
-            dut->hw3_tb->golden_dmem[k] = temp;
+            dut->hw3_tb->write_golden_dmem(k, temp);
         }
+
+        if (single and i+1 != testcase) continue;
 
         dut->rst = 1;
         for (int j = 0; j < 10; j++) {
@@ -111,6 +120,26 @@ int main() {
         // check answer
         if (dut->correctness == 0) {
             printf("Pattern %d : Fail\n", i+1);
+            for (int k = 0; k < 32; k++) {
+                bool v;
+                dut->hw3_tb->read_correctness_reg(k, v);
+                if (!v) {
+                    uint32_t val, golden;
+                    dut->hw3_tb->read_reg(k, val);
+                    dut->hw3_tb->read_golden_reg(k, golden);
+                    printf("  reg  %02d fail: %d (%d)\n", k, val, golden);
+                }
+            }
+            for (int k = 0; k < 16; k++) {
+                bool v;
+                dut->hw3_tb->read_correctness_dmem(k, v);
+                if (!v) {
+                    uint32_t val, golden;
+                    dut->hw3_tb->read_dmem(k, val);
+                    dut->hw3_tb->read_golden_dmem(k, golden);
+                    printf("  dmem %02d fail: %d (%d)\n", k, val, golden);
+                }
+            }
         }
         else {
             printf("Pattern %d : Pass\n", i+1);
