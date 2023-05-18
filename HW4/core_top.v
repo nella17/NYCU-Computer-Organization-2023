@@ -12,77 +12,97 @@ module core_top #(
                      J_TYPE_JR  = 3'b011,
                      J_TYPE_J   = 3'b100;
 
-    // imm
-    reg  [DWIDTH-1:0] pc;
-    wire [DWIDTH-1:0] npc;
-    wire [DWIDTH-1:0] instr;
-    // decode
-    wire [2:0] jump_type;
-    wire [DWIDTH-7:0] jump_addr;
-    wire we_regfile, we_dmem, sel_dmem;
-    wire [3:0] op;
-    wire ssel;
-    wire [DWIDTH-1:0] imm;
-    wire [4:0] rs1_id, rs2_id, rdst_id;
-    // reg
-    wire [DWIDTH-1:0] rdst, rs1, rs2;
-    reg  [DWIDTH-1:0] rs, rt;
-    // alu
-    wire [DWIDTH-1:0] rd;
-    wire zero, overflow;
-    // dmem
-    wire [DWIDTH-1:0] wdata, rdata;
+    // IF imem
+    reg  [DWIDTH-1:0] if_pc;
+    wire [DWIDTH-1:0] if_instr;
 
-    assign npc = pc + 4;
+    // ID
+    reg  [DWIDTH-1:0] id_pc;
+    reg  [DWIDTH-1:0] id_instr;
+    // ID decode
+    wire [2:0] id_jump_type;
+    wire [DWIDTH-7:0] id_jump_addr;
+    wire id_we_regfile, id_we_dmem, id_sel_dmem, id_ssel;
+    wire [3:0] id_op;
+    wire [DWIDTH-1:0] id_imm;
+    wire [4:0] id_rs1_id, id_rs2_id, id_rdst_id;
+    // ID reg
+    wire [DWIDTH-1:0] id_rs1, id_rs2;
+
+    // EX
+    reg  [DWIDTH-1:0] ex_pc;
+    reg  [2:0] ex_jump_type;
+    reg  [DWIDTH-7:0] ex_jump_addr;
+    reg  ex_we_regfile, ex_we_dmem, ex_sel_dmem, ex_ssel;
+    reg  [3:0] ex_op;
+    reg  [DWIDTH-1:0] ex_imm;
+    reg  [4:0] ex_rdst_id;
+    reg  [DWIDTH-1:0] ex_rs1, ex_rs2;
+    wire [DWIDTH-1:0] ex_rs, ex_rt;
+    // EX alu
+    wire [DWIDTH-1:0] ex_rd;
+    wire ex_zero, ex_overflow;
+
+    // MEM
+    reg  mem_we_dmem, mem_sel_dmem;
+    reg  [4:0] mem_rdst_id;
+    reg  [DWIDTH-1:0] mem_rs2;
+    reg  [DWIDTH-1:0] mem_rd;
+    // MEM dmem
+    wire [DWIDTH-1:0] mem_wdata, mem_rdata;
+    // MEM reg
+    wire [DWIDTH-1:0] mem_rdst;
+
+    // WB
+    reg  [4:0] wb_rdst_id;
+    reg  [DWIDTH-1:0] wb_rdst;
+
     always @(posedge clk) begin
         if (rst)
-            pc <= 0;
+            if_pc <= 0;
         else
-            casez (jump_type)
+            casez (ex_jump_type)
                 J_TYPE_NOP:
-                    pc <= npc;
+                    if_pc <= ex_pc + 4;
                 J_TYPE_BEQ:
-                    pc <= npc + (rs == rt ? imm * 4 : 0);
+                    if_pc <= ex_pc + 4 + (ex_rs == ex_rt ? ex_imm * 4 : 0);
                 J_TYPE_JAL,
                 J_TYPE_J:
-                    pc <= { pc[31:28], jump_addr, 2'h0 };
+                    if_pc <= { ex_pc[31:28], ex_jump_addr, 2'h0 };
                 J_TYPE_JR:
-                    pc <= rs;
+                    if_pc <= ex_rs;
                 default:
-                    pc <= pc;
+                    if_pc <= ex_pc;
             endcase
     end
 
-    // TODO: ??
-    assign rs = rs1;
-    assign rt = jump_type == J_TYPE_JAL ? npc :
-                ~ssel && jump_type != J_TYPE_BEQ ? imm :
-                    rs2;
-    assign rdst = ~sel_dmem ? rdata : rd;
-    assign wdata = rs2;
-
     imem imem_inst(
-        .addr(pc),
-        .rdata(instr)
+        .addr(if_pc),
+        .rdata(if_instr)
     );
+
+    always @(posedge clk) begin
+        id_pc       <= if_pc;
+        id_instr    <= if_instr;
+    end
 
     decode decode_inst (
         // input
-        .instr(instr),
+        .instr(id_instr),
 
         // output  
-        .jump_type(jump_type),
-        .jump_addr(jump_addr),
-        .we_regfile(we_regfile),
-        .we_dmem(we_dmem),
-        .sel_dmem(sel_dmem),
+        .jump_type(id_jump_type),
+        .jump_addr(id_jump_addr),
+        .we_regfile(id_we_regfile),
+        .we_dmem(id_we_dmem),
+        .sel_dmem(id_sel_dmem),
 
-        .op(op),
-        .ssel(ssel),
-        .imm(imm),
-        .rs1_id(rs1_id),
-        .rs2_id(rs2_id),
-        .rdst_id(rdst_id)
+        .op(id_op),
+        .ssel(id_ssel),
+        .imm(id_imm),
+        .rs1_id(id_rs1_id),
+        .rs2_id(id_rs2_id),
+        .rdst_id(id_rdst_id)
     );
 
     reg_file reg_file_inst (
@@ -90,37 +110,72 @@ module core_top #(
         .clk(clk),
         .rst(rst),
 
-        .rs1_id(rs1_id),
-        .rs2_id(rs2_id),
+        .rs1_id(id_rs1_id),
+        .rs2_id(id_rs2_id),
 
-        .we(we_regfile),
-        .rdst_id(rdst_id),
-        .rdst(rdst),
+        .we(id_we_regfile),
+        .rdst_id(wb_rdst_id),
+        .rdst(wb_rdst),
 
         // output 
-        .rs1(rs1), // rs
-        .rs2(rs2)  // rt
+        .rs1(id_rs1), // rs
+        .rs2(id_rs2)  // rt
     );
+
+    always @(posedge clk) begin
+        ex_jump_type    <= id_jump_type;
+        ex_jump_addr    <= id_jump_addr;
+        ex_we_regfile   <= id_we_regfile;
+        ex_we_dmem      <= id_we_dmem;
+        ex_sel_dmem     <= id_sel_dmem;
+        ex_ssel         <= id_ssel;
+        ex_op           <= id_op;
+        ex_imm          <= id_imm;
+        ex_rdst_id      <= id_rdst_id;
+        ex_rs1          <= id_rs1;
+        ex_rs2          <= id_rs2;
+    end
+
+    assign ex_rs = ex_rs1;
+    assign ex_rt = ex_jump_type == J_TYPE_JAL ? ex_pc + 4 :
+                ~ex_ssel && ex_jump_type != J_TYPE_BEQ ? ex_imm :
+                    ex_rs2;
 
     alu alu_inst (
         // input
-        .op(op),
-        .rs1(rs1),
-        .rs2(rt),
+        .op(ex_op),
+        .rs1(ex_rs),
+        .rs2(ex_rt),
 
         // output
-        .rd(rd),
-        .zero(zero),
-        .overflow(overflow)
+        .rd(ex_rd),
+        .zero(ex_zero),
+        .overflow(ex_overflow)
     );
+
+    always @(posedge clk) begin
+        mem_we_dmem     <= ex_we_dmem;
+        mem_sel_dmem    <= ex_sel_dmem;
+        mem_rdst_id     <= ex_rdst_id;
+        mem_rs2         <= ex_rs2;
+        mem_rd          <= ex_rd;
+    end
+
+    assign mem_rdst = ~mem_sel_dmem ? mem_rdata : mem_rd;
+    assign mem_wdata = mem_rs2;
 
     // Dmem
     dmem dmem_inst (
         .clk(clk),
-        .addr(rd),
-        .we(we_dmem),
-        .wdata(wdata),
-        .rdata(rdata)
+        .addr(mem_rd),
+        .we(mem_we_dmem),
+        .wdata(mem_wdata),
+        .rdata(mem_rdata)
     );
+
+    always @(posedge clk) begin
+        wb_rdst_id  <= mem_rdst_id;
+        wb_rdst     <= mem_rdst;
+    end
 
 endmodule
