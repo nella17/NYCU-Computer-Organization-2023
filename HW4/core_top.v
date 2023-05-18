@@ -45,7 +45,7 @@ module core_top #(
     wire ex_zero, ex_overflow;
 
     // MEM
-    reg  mem_we_dmem, mem_sel_dmem;
+    reg  mem_we_regfile, mem_we_dmem, mem_sel_dmem;
     reg  [4:0] mem_rdst_id;
     reg  [DWIDTH-1:0] mem_rs2;
     reg  [DWIDTH-1:0] mem_rd;
@@ -55,6 +55,7 @@ module core_top #(
     wire [DWIDTH-1:0] mem_rdst;
 
     // WB
+    reg  wb_we_regfile;
     reg  [4:0] wb_rdst_id;
     reg  [DWIDTH-1:0] wb_rdst;
 
@@ -111,7 +112,7 @@ module core_top #(
         .rs1_id(id_rs1_id),
         .rs2_id(id_rs2_id),
 
-        .we(id_we_regfile),
+        .we(wb_we_regfile),
         .rdst_id(wb_rdst_id),
         .rdst(wb_rdst),
 
@@ -190,12 +191,14 @@ module core_top #(
 
     always @(posedge clk) begin
         if (rst) begin
+            mem_we_regfile  <= 0;
             mem_we_dmem     <= 0;
             mem_sel_dmem    <= 0;
             mem_rdst_id     <= 0;
             mem_rs2         <= 0;
             mem_rd          <= 0;
         end else begin
+            mem_we_regfile  <= ex_we_regfile;
             mem_we_dmem     <= ex_we_dmem;
             mem_sel_dmem    <= ex_sel_dmem;
             mem_rdst_id     <= ex_rdst_id;
@@ -216,14 +219,8 @@ module core_top #(
         .rdata(mem_rdata)
     );
 
-    always @(posedge clk) begin
-        if (rst) begin
-            wb_rdst_id  <= 0;
-            wb_rdst     <= 0;
-        end else begin
-            wb_rdst_id  <= mem_rdst_id;
-            wb_rdst     <= mem_rdst;
-        end
-    end
+    assign wb_we_regfile    = mem_we_regfile;
+    assign wb_rdst_id       = mem_rdst_id;
+    assign wb_rdst          = mem_rdst;
 
 endmodule
