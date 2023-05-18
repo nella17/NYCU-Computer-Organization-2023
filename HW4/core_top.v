@@ -76,13 +76,8 @@ module core_top #(
     );
 
     always @(posedge clk) begin
-        if (rst) begin
-            id_npc      <= 0;
-            id_instr    <= 0;
-        end else begin
-            id_npc      <= if_npc;
-            id_instr    <= if_instr;
-        end
+        id_npc      <= rst ? 0 : if_npc;
+        id_instr    <= rst ? 0 : if_instr;
     end
 
     decode decode_inst (
@@ -122,33 +117,18 @@ module core_top #(
     );
 
     always @(posedge clk) begin
-        if (rst) begin
-            ex_npc          <= 0;
-            ex_jump_type    <= 0;
-            ex_jump_addr    <= 0;
-            ex_we_regfile   <= 0;
-            ex_we_dmem      <= 0;
-            ex_sel_dmem     <= 0;
-            ex_ssel         <= 0;
-            ex_op           <= 0;
-            ex_imm          <= 0;
-            ex_rdst_id      <= 0;
-            ex_rs1          <= 0;
-            ex_rs2          <= 0;
-        end else begin
-            ex_npc          <= id_npc;
-            ex_jump_type    <= id_jump_type;
-            ex_jump_addr    <= id_jump_addr;
-            ex_we_regfile   <= id_we_regfile;
-            ex_we_dmem      <= id_we_dmem;
-            ex_sel_dmem     <= id_sel_dmem;
-            ex_ssel         <= id_ssel;
-            ex_op           <= id_op;
-            ex_imm          <= id_imm;
-            ex_rdst_id      <= id_rdst_id;
-            ex_rs1          <= id_rs1;
-            ex_rs2          <= id_rs2;
-        end
+        ex_npc          <= rst ? 0 : id_npc;
+        ex_jump_type    <= rst ? 0 : id_jump_type;
+        ex_jump_addr    <= rst ? 0 : id_jump_addr;
+        ex_we_regfile   <= rst ? 0 : id_we_regfile;
+        ex_we_dmem      <= rst ? 0 : id_we_dmem;
+        ex_sel_dmem     <= rst ? 0 : id_sel_dmem;
+        ex_ssel         <= rst ? 0 : id_ssel;
+        ex_op           <= rst ? 0 : id_op;
+        ex_imm          <= rst ? 0 : id_imm;
+        ex_rdst_id      <= rst ? 0 : id_rdst_id;
+        ex_rs1          <= rst ? 0 : id_rs1;
+        ex_rs2          <= rst ? 0 : id_rs2;
     end
 
     always @(posedge clk) begin
@@ -190,21 +170,12 @@ module core_top #(
     );
 
     always @(posedge clk) begin
-        if (rst) begin
-            mem_we_regfile  <= 0;
-            mem_we_dmem     <= 0;
-            mem_sel_dmem    <= 0;
-            mem_rdst_id     <= 0;
-            mem_rs2         <= 0;
-            mem_rd          <= 0;
-        end else begin
-            mem_we_regfile  <= ex_we_regfile;
-            mem_we_dmem     <= ex_we_dmem;
-            mem_sel_dmem    <= ex_sel_dmem;
-            mem_rdst_id     <= ex_rdst_id;
-            mem_rs2         <= ex_rs2;
-            mem_rd          <= ex_rd;
-        end
+        mem_we_regfile  <= rst ? 0 : ex_we_regfile;
+        mem_we_dmem     <= rst ? 0 : ex_we_dmem;
+        mem_sel_dmem    <= rst ? 0 : ex_sel_dmem;
+        mem_rdst_id     <= rst ? 0 : ex_rdst_id;
+        mem_rs2         <= rst ? 0 : ex_rs2;
+        mem_rd          <= rst ? 0 : ex_rd;
     end
 
     assign mem_rdst = ~mem_sel_dmem ? mem_rdata : mem_rd;
