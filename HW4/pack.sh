@@ -4,8 +4,8 @@ if [ ! "$ID" ]; then
   exit
 fi
 
-FOLDER="HW3_$ID"
-PACK="HW3_$ID.zip"
+FOLDER="hw4_$ID"
+PACK="hw4_$ID.zip"
 
 rm -fr "$FOLDER" || true
 mkdir "$FOLDER"

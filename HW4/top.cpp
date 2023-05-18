@@ -1,6 +1,6 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "Vhw3_tb.h"
+#include "Vhw4_tb.h"
 
 #define TRACE
 vluint64_t sim_time = 0;
@@ -10,7 +10,7 @@ int main() {
     Verilated::traceEverOn(true);
     VerilatedVcdC *m_trace = new VerilatedVcdC;
 #endif
-    Vhw3_tb *dut = new Vhw3_tb;        // our DUT(Design Under Test)
+    Vhw4_tb *dut = new Vhw4_tb;        // our DUT(Design Under Test)
 
 #ifdef TRACE
     dut->trace(m_trace, 5);
