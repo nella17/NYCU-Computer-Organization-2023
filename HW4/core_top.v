@@ -13,11 +13,13 @@ module core_top #(
                      J_TYPE_J   = 3'b100;
 
     // IF imem
+    reg  start;
     reg  [DWIDTH-1:0] if_pc;
+    wire [DWIDTH-1:0] if_npc;
     wire [DWIDTH-1:0] if_instr;
 
     // ID
-    reg  [DWIDTH-1:0] id_pc;
+    reg  [DWIDTH-1:0] id_npc;
     reg  [DWIDTH-1:0] id_instr;
     // ID decode
     wire [2:0] id_jump_type;
@@ -30,7 +32,7 @@ module core_top #(
     wire [DWIDTH-1:0] id_rs1, id_rs2;
 
     // EX
-    reg  [DWIDTH-1:0] ex_pc;
+    reg  [DWIDTH-1:0] ex_pc, ex_npc;
     reg  [2:0] ex_jump_type;
     reg  [DWIDTH-7:0] ex_jump_addr;
     reg  ex_we_regfile, ex_we_dmem, ex_sel_dmem, ex_ssel;
@@ -57,23 +59,20 @@ module core_top #(
     reg  [4:0] wb_rdst_id;
     reg  [DWIDTH-1:0] wb_rdst;
 
+    always @(posedge clk)
+        if (rst)
+            start <= 0;
+        else
+            start <= 1;
+
+    assign if_npc = if_pc + (start ? 4 : 0);
     always @(posedge clk) begin
         if (rst)
             if_pc <= 0;
+        else if (ex_jump_type != J_TYPE_NOP)
+            if_pc <= ex_pc;
         else
-            casez (ex_jump_type)
-                J_TYPE_NOP:
-                    if_pc <= ex_pc + 4;
-                J_TYPE_BEQ:
-                    if_pc <= ex_pc + 4 + (ex_rs == ex_rt ? ex_imm * 4 : 0);
-                J_TYPE_JAL,
-                J_TYPE_J:
-                    if_pc <= { ex_pc[31:28], ex_jump_addr, 2'h0 };
-                J_TYPE_JR:
-                    if_pc <= ex_rs;
-                default:
-                    if_pc <= ex_pc;
-            endcase
+            if_pc <= if_npc;
     end
 
     imem imem_inst(
@@ -82,7 +81,7 @@ module core_top #(
     );
 
     always @(posedge clk) begin
-        id_pc       <= if_pc;
+        id_npc      <= if_npc;
         id_instr    <= if_instr;
     end
 
@@ -123,7 +122,7 @@ module core_top #(
     );
 
     always @(posedge clk) begin
-        ex_pc           <= id_pc;
+        ex_npc          <= id_npc;
         ex_jump_type    <= id_jump_type;
         ex_jump_addr    <= id_jump_addr;
         ex_we_regfile   <= id_we_regfile;
@@ -137,8 +136,25 @@ module core_top #(
         ex_rs2          <= id_rs2;
     end
 
+    always @(posedge clk) begin
+        casez (ex_jump_type)
+            J_TYPE_NOP:
+                ex_pc <= ex_npc;
+            J_TYPE_BEQ:
+                ex_pc <= ex_npc + (ex_rs == ex_rt ? ex_imm * 4 : 0);
+            J_TYPE_JAL,
+            J_TYPE_J:
+                ex_pc <= { ex_npc[31:28], ex_jump_addr, 2'h0 };
+            J_TYPE_JR:
+                ex_pc <= ex_rs;
+            default:
+                ex_pc <= ex_npc;
+        endcase
+    end
+
+
     assign ex_rs = ex_rs1;
-    assign ex_rt = ex_jump_type == J_TYPE_JAL ? ex_pc + 4 :
+    assign ex_rt = ex_jump_type == J_TYPE_JAL ? ex_npc :
                 ~ex_ssel && ex_jump_type != J_TYPE_BEQ ? ex_imm :
                     ex_rs2;
 
