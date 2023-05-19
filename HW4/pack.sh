@@ -9,7 +9,7 @@ PACK="hw4_$ID.zip"
 
 rm -fr "$FOLDER" || true
 mkdir "$FOLDER"
-files=(alu.v core_top.v decode.v dmem.v  imem.v reg_file.v)
+files=(alu.v core_top.v decode.v dmem.v hazard_ctrl.v imem.v reg_file.v)
 for file in "${files[@]}"; do
   cp "$file" "$FOLDER"
 done

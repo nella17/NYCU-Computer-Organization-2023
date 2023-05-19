@@ -57,7 +57,7 @@ int main(int argc, char* const argv[]) {
         // read file - cycle
         int cycle;
         fs >> cycle;
-        cycle *= 10;
+        cycle *= 4;
         cout << endl << "Pattern " << i+1 << " check at cycle " << cycle << endl;
 
         // initialize imem
