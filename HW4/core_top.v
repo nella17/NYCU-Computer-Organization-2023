@@ -18,7 +18,8 @@ module core_top #(
 
     localparam [1:0] C_PIPE  = 2'b00,
                      C_FLUSH = 2'b10,
-                     C_STALL = 2'b01;
+                     C_STALL = 2'b01,
+                     C_JUMP  = 2'b11;
     // Jump type
     localparam [2:0] J_TYPE_NOP = 3'b000,
                      J_TYPE_BEQ = 3'b001,
@@ -85,7 +86,7 @@ module core_top #(
 
         .ex_jump_type(ex_jump_type),
         .id_pc(id_pc),
-        .ex_pc(ex_pc),
+        .ex_jpc(ex_jpc),
 
         .if_ctrl (if_ctrl ),
         .id_ctrl (id_ctrl ),
@@ -97,11 +98,10 @@ module core_top #(
 
     always @(posedge clk) begin
         casez (if_ctrl)
-            C_PIPE :
-                if (ex_jump_type != J_TYPE_NOP)
-                    if_pc <= ex_jpc;
-                else
-                    if_pc <= if_npc;
+            C_PIPE:
+                if_pc <= if_npc;
+            C_JUMP:
+                if_pc <= ex_jpc;
             C_FLUSH:
                 if_pc <= 0;
             C_STALL:
@@ -170,24 +170,20 @@ module core_top #(
     `PIPE(clk, ex_ctrl, ex_rs1       , id_rs1        );
     `PIPE(clk, ex_ctrl, ex_rs2       , id_rs2        );
 
-    always @(posedge clk) begin
-        if (rst) begin
-            ex_jpc <= 0;
-        end else begin
-            casez (ex_jump_type)
-                J_TYPE_NOP:
-                    ex_jpc <= ex_npc;
-                J_TYPE_BEQ:
-                    ex_jpc <= ex_npc + (ex_rs == ex_rt ? ex_imm * 4 : 0);
-                J_TYPE_JAL,
-                J_TYPE_J:
-                    ex_jpc <= { ex_npc[31:28], ex_jump_addr, 2'h0 };
-                J_TYPE_JR:
-                    ex_jpc <= ex_rs;
-                default:
-                    ex_jpc <= ex_npc;
-            endcase
-        end
+    always @(*) begin
+        casez (ex_jump_type)
+            J_TYPE_NOP:
+                ex_jpc = ex_npc;
+            J_TYPE_BEQ:
+                ex_jpc = ex_npc + (ex_rs == ex_rt ? ex_imm * 4 : 0);
+            J_TYPE_JAL,
+            J_TYPE_J:
+                ex_jpc = { ex_npc[31:28], ex_jump_addr, 2'h0 };
+            J_TYPE_JR:
+                ex_jpc = ex_rs;
+            default:
+                ex_jpc = ex_npc;
+        endcase
     end
 
 

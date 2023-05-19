@@ -4,13 +4,14 @@ module hazard_ctrl #(
     input  rst,
     input  [4:0] id_rs1_id, id_rs2_id, ex_rdst_id, mem_rdst_id, wb_rdst_id,
     input  [2:0] ex_jump_type,
-    input  [DWIDTH-1:0] id_pc, ex_pc,
+    input  [DWIDTH-1:0] id_pc, ex_jpc,
     output reg [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl
 );
 
     localparam [1:0] C_PIPE  = 2'b00,
                      C_FLUSH = 2'b10,
-                     C_STALL = 2'b01;
+                     C_STALL = 2'b01,
+                     C_JUMP  = 2'b11;
     // Jump type
     localparam [2:0] J_TYPE_NOP = 3'b000,
                      J_TYPE_BEQ = 3'b001,
@@ -22,13 +23,13 @@ module hazard_ctrl #(
             id_rs1_id != 0 && (id_rs1_id == ex_rdst_id || id_rs1_id == mem_rdst_id || id_rs1_id == wb_rdst_id) ||
             id_rs2_id != 0 && (id_rs2_id == ex_rdst_id || id_rs2_id == mem_rdst_id || id_rs2_id == wb_rdst_id);
 
-    wire control_hazard = ex_jump_type != J_TYPE_NOP && ex_pc != id_pc;
+    wire control_hazard = ex_jump_type != J_TYPE_NOP && ex_jpc != id_pc;
 
     always @(*) begin
         if (rst)
             if_ctrl = C_FLUSH;
         else if (control_hazard)
-            if_ctrl = C_PIPE;
+            if_ctrl = C_JUMP;
         else if (id_ctrl == C_STALL || id_ctrl == C_FLUSH)
             if_ctrl = C_STALL;
         else
