@@ -3,7 +3,7 @@
  *    Date   : 2022-03-30
  */
 
-module hw4_tb (
+module hw3_tb (
     input         clk,
     input         rst,
     output reg    finish
