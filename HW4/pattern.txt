@@ -1,1 +1,1 @@
-../HW3_TA/pattern.txt
+../HW4_TA/pattern.txt
