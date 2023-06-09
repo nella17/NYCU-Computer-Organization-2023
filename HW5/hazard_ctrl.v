@@ -5,7 +5,7 @@ module hazard_ctrl #(
     input  [4:0] id_rs1_id, id_rs2_id, ex_rdst_id, mem_rdst_id, wb_rdst_id,
     input  ex_re_dmem,
     input  [2:0] ex_jump_type,
-    input  [DWIDTH-1:0] id_pc, ex_jpc,
+    input  [DWIDTH-1:0] id_pc, ex_pc, ex_npc, ex_jpc,
     output reg [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl, wb_ctrl
 );
     import common::*;
@@ -14,7 +14,7 @@ module hazard_ctrl #(
             id_rs1_id != 0 && ex_re_dmem && id_rs1_id == ex_rdst_id ||
             id_rs2_id != 0 && ex_re_dmem && id_rs2_id == ex_rdst_id;
 
-    wire control_hazard = ex_jump_type != J_TYPE_NOP && ex_jpc != id_pc;
+    wire control_hazard = (ex_pc != 0 || ex_npc != 0) && ex_jpc != id_pc;
 
     always @(*) begin
         if (rst)

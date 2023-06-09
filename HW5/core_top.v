@@ -19,7 +19,7 @@ module core_top #(
 
     // IF imem
     reg  [DWIDTH-1:0] if_pc;
-    wire [DWIDTH-1:0] if_npc;
+    reg  [DWIDTH-1:0] if_npc;
     wire [DWIDTH-1:0] if_instr;
 
     // ID
@@ -86,6 +86,8 @@ module core_top #(
 
         .ex_jump_type(ex_jump_type),
         .id_pc(id_pc),
+        .ex_pc(ex_pc),
+        .ex_npc(ex_npc),
         .ex_jpc(ex_jpc),
 
         .if_ctrl (if_ctrl ),
@@ -113,7 +115,17 @@ module core_top #(
         .fw_rs2(fw_rs2)
     );
 
-    assign if_npc = if_pc + 4;
+    branch_predictor #(
+        .SIZE(MEM_SIZE),
+        .DWIDTH(DWIDTH)
+    ) branch_predictor_inst(
+        .clk(clk),
+        .if_pc(if_pc),
+        .if_instr(if_instr),
+        .if_npc(if_npc)
+    );
+
+    // assign if_npc = if_pc + 4;
 
     always @(posedge clk) begin
         casez (if_ctrl)
