@@ -37,6 +37,7 @@ module core_top #(
 
     // EX
     reg  [DWIDTH-1:0] ex_pc, ex_npc, ex_jpc;
+    wire [DWIDTH-1:0] ex_pc4;
     reg  [2:0] ex_jump_type;
     reg  [DWIDTH-7:0] ex_jump_addr;
     reg  ex_we_regfile, ex_we_dmem, ex_re_dmem, ex_ssel;
@@ -210,19 +211,20 @@ module core_top #(
     `PIPE(clk, ex_ctrl, ex_rs1_pre   , id_rs1        );
     `PIPE(clk, ex_ctrl, ex_rs2_pre   , id_rs2        );
 
+    assign ex_pc4 = ex_pc + 4;
     always @(*) begin
         casez (ex_jump_type)
             J_TYPE_NOP:
-                ex_jpc = ex_npc;
+                ex_jpc = ex_pc4;
             J_TYPE_BEQ:
-                ex_jpc = ex_npc + (ex_rs == ex_rt ? ex_imm * 4 : 0);
+                ex_jpc = ex_pc4 + (ex_rs == ex_rt ? ex_imm * 4 : 0);
             J_TYPE_JAL,
             J_TYPE_J:
-                ex_jpc = { ex_npc[31:28], ex_jump_addr, 2'h0 };
+                ex_jpc = { ex_pc4[31:28], ex_jump_addr, 2'h0 };
             J_TYPE_JR:
                 ex_jpc = ex_rs;
             default:
-                ex_jpc = ex_npc;
+                ex_jpc = ex_pc4;
         endcase
     end
 
@@ -253,7 +255,7 @@ module core_top #(
     end
 
     assign ex_rs = ex_rs1;
-    assign ex_rt = ex_jump_type == J_TYPE_JAL ? ex_npc :
+    assign ex_rt = ex_jump_type == J_TYPE_JAL ? ex_pc4 :
                 ~ex_ssel && ex_jump_type != J_TYPE_BEQ ? ex_imm :
                     ex_rs2;
 
