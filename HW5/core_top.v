@@ -26,6 +26,10 @@ module core_top #(
                      J_TYPE_JAL = 3'b010,
                      J_TYPE_JR  = 3'b011,
                      J_TYPE_J   = 3'b100;
+    // fw type
+    localparam [1:0] FW_EX  = 2'b00,
+                     FW_MEM = 2'b01,
+                     FW_WB  = 2'b10;
 
     localparam integer MEM_SIZE = 64;
 
@@ -54,9 +58,9 @@ module core_top #(
     reg  ex_we_regfile, ex_we_dmem, ex_sel_dmem, ex_ssel;
     reg  [3:0] ex_op;
     reg  [DWIDTH-1:0] ex_imm;
-    reg  [4:0] ex_rdst_id;
+    reg  [4:0] ex_rs1_id, ex_rs2_id, ex_rdst_id;
     reg  [DWIDTH-1:0] ex_rs1, ex_rs2;
-    wire [DWIDTH-1:0] ex_rs, ex_rt;
+    reg  [DWIDTH-1:0] ex_rs, ex_rt;
     // EX alu
     wire [DWIDTH-1:0] ex_rd;
     wire ex_zero, ex_overflow;
@@ -76,7 +80,10 @@ module core_top #(
     reg  [4:0] wb_rdst_id;
     reg  [DWIDTH-1:0] wb_rdst;
 
+    // ctrls
     wire [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl;
+    wire [1:0] fw_rs1, fw_rs2;
+
     hazard_ctrl hazard_ctrl_inst(
         .rst(rst),
 
@@ -94,6 +101,22 @@ module core_top #(
         .id_ctrl (id_ctrl ),
         .ex_ctrl (ex_ctrl ),
         .mem_ctrl(mem_ctrl)
+    );
+
+    forwarding_uint forwarding_uint_inst(
+        .ex_rs1_id  (ex_rs1_id  ),
+        .ex_rs2_id  (ex_rs2_id  ),
+        .mem_rdst_id(mem_rdst_id),
+        .wb_rdst_id (wb_rdst_id ),
+
+        .mem_we_regfile(mem_we_regfile),
+        .wb_we_regfile (wb_we_regfile ),
+
+        .mem_rdst(mem_rdst),
+        .wb_rdst (wb_rdst ),
+
+        .fw_rs1(fw_rs1),
+        .fw_rs2(fw_rs2)
     );
 
     assign if_npc = if_pc + 4;
@@ -170,6 +193,8 @@ module core_top #(
     `PIPE(clk, ex_ctrl, ex_ssel      , id_ssel       );
     `PIPE(clk, ex_ctrl, ex_op        , id_op         );
     `PIPE(clk, ex_ctrl, ex_imm       , id_imm        );
+    `PIPE(clk, ex_ctrl, ex_rs1_id    , id_rs1_id     );
+    `PIPE(clk, ex_ctrl, ex_rs2_id    , id_rs2_id     );
     `PIPE(clk, ex_ctrl, ex_rdst_id   , id_rdst_id    );
     `PIPE(clk, ex_ctrl, ex_rs1       , id_rs1        );
     `PIPE(clk, ex_ctrl, ex_rs2       , id_rs2        );
@@ -190,11 +215,41 @@ module core_top #(
         endcase
     end
 
+    // assign ex_rs = ex_rs1;
+    always @(*) begin
+        casez (fw_rs1)
+            FW_EX:
+                ex_rs = ex_rs1;
+            FW_MEM:
+                ex_rs = mem_rdst;
+            FW_WB:
+                ex_rs = wb_rdst;
+            default:
+                ex_rs = ex_rs1;
+        endcase
+    end
 
-    assign ex_rs = ex_rs1;
-    assign ex_rt = ex_jump_type == J_TYPE_JAL ? ex_npc :
-                ~ex_ssel && ex_jump_type != J_TYPE_BEQ ? ex_imm :
-                    ex_rs2;
+    // assign ex_rt = ex_jump_type == J_TYPE_JAL ? ex_npc :
+    //             ~ex_ssel && ex_jump_type != J_TYPE_BEQ ? ex_imm :
+    //                 ex_rs2;
+
+    always @(*) begin
+        if (ex_jump_type == J_TYPE_JAL)
+            ex_rt = ex_npc;
+        else if (~ex_ssel && ex_jump_type != J_TYPE_BEQ)
+            ex_rt = ex_imm;
+        else
+            casez (fw_rs1)
+                FW_EX:
+                    ex_rt = ex_rs2;
+                FW_MEM:
+                    ex_rt = mem_rdst;
+                FW_WB:
+                    ex_rt = wb_rdst;
+                default:
+                    ex_rt = ex_rs2;
+            endcase
+    end
 
     alu alu_inst (
         // input
