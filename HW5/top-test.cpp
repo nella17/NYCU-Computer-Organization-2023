@@ -14,12 +14,16 @@ vluint64_t sim_time = 0;
 Vhw3_tb *dut;
 
 int main(int argc, char* const argv[]) {
-    bool single = argc > 1;
-    int testcase = -1;
-    if (single) {
-        printf("test > ");
-        scanf("%d", &testcase);
-    }
+    int count = argc <= 1 ? 0 : atoi(argv[1]);
+    int testcase = -1, cnt = count;
+    auto readcase = [&]() {
+        if (cnt) {
+            cnt--;
+            printf("test > ");
+            scanf("%d", &testcase);
+        }
+    };
+    readcase();
 
 #ifdef TRACE
     Verilated::traceEverOn(true);
@@ -93,7 +97,7 @@ int main(int argc, char* const argv[]) {
             dut->hw3_tb->write_golden_dmem(k, temp);
         }
 
-        if (single and i+1 != testcase) continue;
+        if (count and i+1 != testcase) continue;
 
         dut->rst = 1;
         for (int j = 0; j < 10; j++) {
@@ -145,6 +149,8 @@ int main(int argc, char* const argv[]) {
             printf("Pattern %d : Pass\n", i+1);
             total_score += 10;
         }
+
+        readcase();
     }
 
     printf ("===========================================\n");
