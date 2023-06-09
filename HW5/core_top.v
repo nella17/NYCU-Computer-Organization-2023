@@ -60,6 +60,7 @@ module core_top #(
     reg  [3:0] ex_op;
     reg  [DWIDTH-1:0] ex_imm;
     reg  [4:0] ex_rs1_id, ex_rs2_id, ex_rdst_id;
+    reg  [DWIDTH-1:0] ex_rs1_pre, ex_rs2_pre;
     reg  [DWIDTH-1:0] ex_rs1, ex_rs2;
     reg  [DWIDTH-1:0] ex_rs, ex_rt;
     // EX alu
@@ -202,8 +203,8 @@ module core_top #(
     `PIPE(clk, ex_ctrl, ex_rs1_id    , id_rs1_id     );
     `PIPE(clk, ex_ctrl, ex_rs2_id    , id_rs2_id     );
     `PIPE(clk, ex_ctrl, ex_rdst_id   , id_rdst_id    );
-    `PIPE(clk, ex_ctrl, ex_rs1       , id_rs1        );
-    `PIPE(clk, ex_ctrl, ex_rs2       , id_rs2        );
+    `PIPE(clk, ex_ctrl, ex_rs1_pre   , id_rs1        );
+    `PIPE(clk, ex_ctrl, ex_rs2_pre   , id_rs2        );
 
     always @(*) begin
         casez (ex_jump_type)
@@ -221,41 +222,36 @@ module core_top #(
         endcase
     end
 
-    // assign ex_rs = ex_rs1;
     always @(*) begin
         casez (fw_rs1)
             FW_EX:
-                ex_rs = ex_rs1;
+                ex_rs1 = ex_rs1_pre;
             FW_MEM:
-                ex_rs = mem_rdst;
+                ex_rs1 = mem_rdst;
             FW_WB:
-                ex_rs = wb_rdst;
+                ex_rs1 = wb_rdst;
             default:
-                ex_rs = ex_rs1;
+                ex_rs1 = ex_rs1_pre;
         endcase
     end
 
-    // assign ex_rt = ex_jump_type == J_TYPE_JAL ? ex_npc :
-    //             ~ex_ssel && ex_jump_type != J_TYPE_BEQ ? ex_imm :
-    //                 ex_rs2;
-
     always @(*) begin
-        if (ex_jump_type == J_TYPE_JAL)
-            ex_rt = ex_npc;
-        else if (~ex_ssel && ex_jump_type != J_TYPE_BEQ)
-            ex_rt = ex_imm;
-        else
-            casez (fw_rs2)
-                FW_EX:
-                    ex_rt = ex_rs2;
-                FW_MEM:
-                    ex_rt = mem_rdst;
-                FW_WB:
-                    ex_rt = wb_rdst;
-                default:
-                    ex_rt = ex_rs2;
-            endcase
+        casez (fw_rs2)
+            FW_EX:
+                ex_rs2 = ex_rs2_pre;
+            FW_MEM:
+                ex_rs2 = mem_rdst;
+            FW_WB:
+                ex_rs2 = wb_rdst;
+            default:
+                ex_rs2 = ex_rs2_pre;
+        endcase
     end
+
+    assign ex_rs = ex_rs1;
+    assign ex_rt = ex_jump_type == J_TYPE_JAL ? ex_npc :
+                ~ex_ssel && ex_jump_type != J_TYPE_BEQ ? ex_imm :
+                    ex_rs2;
 
     alu alu_inst (
         // input
