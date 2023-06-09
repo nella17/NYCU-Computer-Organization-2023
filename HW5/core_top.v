@@ -88,7 +88,9 @@ module core_top #(
     wire [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl, wb_ctrl;
     wire [1:0] fw_rs1, fw_rs2;
 
-    hazard_ctrl hazard_ctrl_inst(
+    hazard_ctrl #(
+        .DWIDTH(DWIDTH)
+    ) hazard_ctrl_inst(
         .rst(rst),
 
         .id_rs1_id  (id_rs1_id  ),
@@ -110,7 +112,9 @@ module core_top #(
         .wb_ctrl (wb_ctrl )
     );
 
-    forwarding_uint forwarding_uint_inst(
+    forwarding_uint #(
+        .DWIDTH(DWIDTH)
+    ) forwarding_uint_inst(
         .ex_rs1_id  (ex_rs1_id  ),
         .ex_rs2_id  (ex_rs2_id  ),
         .mem_rdst_id(mem_rdst_id),
@@ -144,7 +148,8 @@ module core_top #(
     end
 
     imem #(
-        .SIZE(MEM_SIZE)
+        .SIZE(MEM_SIZE),
+        .DWIDTH(DWIDTH)
     ) imem_inst(
         .addr(if_pc),
         .rdata(if_instr)
@@ -154,7 +159,9 @@ module core_top #(
     `PIPE(clk, id_ctrl, id_npc  , if_npc  );
     `PIPE(clk, id_ctrl, id_instr, if_instr);
 
-    decode decode_inst (
+    decode #(
+        .DWIDTH(DWIDTH)
+    ) decode_inst (
         // input
         .instr(id_instr),
 
@@ -173,7 +180,9 @@ module core_top #(
         .rdst_id(id_rdst_id)
     );
 
-    reg_file reg_file_inst (
+    reg_file #(
+        .DWIDTH(DWIDTH)
+    ) reg_file_inst (
         // input
         .clk(clk),
         .rst(rst),
@@ -253,7 +262,9 @@ module core_top #(
                 ~ex_ssel && ex_jump_type != J_TYPE_BEQ ? ex_imm :
                     ex_rs2;
 
-    alu alu_inst (
+    alu #(
+        .DWIDTH(DWIDTH)
+    ) alu_inst (
         // input
         .op(ex_op),
         .rs1(ex_rs),
@@ -278,7 +289,8 @@ module core_top #(
 
     // Dmem
     dmem #(
-        .SIZE(MEM_SIZE)
+        .SIZE(MEM_SIZE),
+        .DWIDTH(DWIDTH)
     ) dmem_inst (
         .clk(clk),
         .addr(mem_rd),
