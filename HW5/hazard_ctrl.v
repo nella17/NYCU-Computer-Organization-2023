@@ -5,22 +5,27 @@ module hazard_ctrl #(
     input  [4:0] id_rs1_id, id_rs2_id, ex_rdst_id, mem_rdst_id, wb_rdst_id,
     input  ex_re_dmem,
     input  [2:0] ex_jump_type,
-    input  [DWIDTH-1:0] id_pc, ex_pc, ex_npc, ex_jpc,
-    output reg [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl, wb_ctrl
+    input  [DWIDTH-1:0] if_pc, id_pc, ex_pc, ex_npc, ex_jpc,
+    output reg [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl, wb_ctrl,
+    output reg data_hazard, control_hazard
 );
     import common::*;
 
-    wire data_hazard = 
+    assign data_hazard = 
             id_rs1_id != 0 && ex_re_dmem && id_rs1_id == ex_rdst_id ||
             id_rs2_id != 0 && ex_re_dmem && id_rs2_id == ex_rdst_id;
 
-    wire control_hazard = (ex_pc != 0 || ex_npc != 0) && ex_jpc != id_pc;
+    assign control_hazard = (ex_pc != 0 || ex_npc != 0) && ex_jpc != id_pc;
+    wire control_bypass = ex_jpc == if_pc;
 
     always @(*) begin
         if (rst)
             if_ctrl = C_FLUSH;
         else if (control_hazard)
-            if_ctrl = C_JUMP;
+            if (control_bypass)
+                if_ctrl = C_PIPE;
+            else
+                if_ctrl = C_JUMP;
         else if (id_ctrl == C_STALL || id_ctrl == C_FLUSH)
             if_ctrl = C_STALL;
         else
@@ -31,7 +36,10 @@ module hazard_ctrl #(
         if (rst)
             id_ctrl = C_FLUSH;
         else if (control_hazard)
-            id_ctrl = C_FLUSH;
+            if (control_bypass)
+                id_ctrl = C_PIPE;
+            else
+                id_ctrl = C_FLUSH;
         else if (ex_ctrl == C_STALL || ex_ctrl == C_FLUSH)
             id_ctrl = C_STALL;
         else

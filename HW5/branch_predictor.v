@@ -3,7 +3,9 @@ module branch_predictor #(
     parameter DWIDTH = 32
 ) (
     input  clk,
-    input  [DWIDTH-1:0] if_pc, if_instr,
+    input  rst,
+    input  control_hazard,
+    input  [DWIDTH-1:0] if_pc, if_instr, ex_pc, ex_jpc,
     output reg [DWIDTH-1:0] if_npc
 );
     import common::*;
@@ -18,8 +20,8 @@ module branch_predictor #(
     reg  [2:0] jump_type;
     always @ (*) begin
         casez (opcode)
-            OPCODE_J:   jump_type = J_TYPE_J;
-            OPCODE_JAL: jump_type = J_TYPE_JAL;
+            OPCODE_J,
+            OPCODE_JAL: jump_type = J_TYPE_J;
             OPCODE_BEQ: jump_type = J_TYPE_BEQ;
             default:    jump_type = J_TYPE_NOP;
         endcase
@@ -28,21 +30,28 @@ module branch_predictor #(
     // FIXME: when SIZE tooo large
     reg [DWIDTH-1:0] TARGET [SIZE-1:0];
     reg PREDICT [SIZE-1:0];
+    reg SELECT [SIZE-1:0];
+    reg select = 0;
 
-    integer idx;
+    integer i;
     initial begin
-        for (idx = 0; idx < SIZE; idx = idx+1) begin
-            TARGET[idx] = idx * 4 + 4;
-            PREDICT[idx] = 1;
+        for (i = 0; i < SIZE; i = i+1) begin
+            TARGET[i] = i * 4 + 4;
+            PREDICT[i] = 1;
+            SELECT[i] = 0;
         end
     end
 
-    wire [$clog2(SIZE)-1:0] idx = if_pc[$clog2(SIZE)+1:2];
-    wire init = TARGET[idx] == if_pc4;
+    always @(posedge rst) begin
+        select = ~select;
+    end
+
+    wire [$clog2(SIZE)-1:0] if_idx = if_pc[$clog2(SIZE)+1:2];
+    wire [$clog2(SIZE)-1:0] ex_idx = ex_pc[$clog2(SIZE)+1:2];
 
     reg [DWIDTH-1:0] target;
     always @(*) begin
-        if (init)
+        if (SELECT[if_idx] != select)
             casez (jump_type)
                 J_TYPE_NOP:
                     target = if_pc4;
@@ -54,22 +63,33 @@ module branch_predictor #(
                     target = if_pc4;
             endcase
         else
-            target = TARGET[idx];
+            target = TARGET[if_idx];
     end
 
+    wire predict = PREDICT[if_idx];
     always @(*) begin
-        if (PREDICT[idx])
+        if (predict)
             if_npc = target;
         else
             if_npc = if_pc4;
     end
 
-    always @(clk) begin
-        // TODO
-        if (0) begin
-            TARGET[idx] <= 0;
-        end else if (init) begin
-            TARGET[idx] <= target;
+    always @(negedge clk) begin
+        if (control_hazard)
+            PREDICT[ex_idx] <= ex_jpc == ex_pc + 4;
+        else if (jump_type == J_TYPE_J)
+            PREDICT[if_idx] <= 1;
+        else if (SELECT[if_idx] != select)
+            PREDICT[if_idx] <= target == if_pc4;
+    end
+
+    always @(posedge clk) begin
+        if (control_hazard) begin
+            SELECT[ex_idx] <= select;
+            TARGET[ex_idx] <= ex_jpc;
+        end else begin
+            SELECT[if_idx] <= select;
+            TARGET[if_idx] <= target;
         end
     end
 

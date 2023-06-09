@@ -36,7 +36,8 @@ module core_top #(
     wire [DWIDTH-1:0] id_rs1, id_rs2;
 
     // EX
-    reg  [DWIDTH-1:0] ex_pc, ex_npc, ex_jpc;
+    reg  [DWIDTH-1:0] ex_pc, ex_npc, ex_jpc, ex_jpc_prev;
+    reg  ex_jpc_saved;
     wire [DWIDTH-1:0] ex_pc4;
     reg  [2:0] ex_jump_type;
     reg  [DWIDTH-7:0] ex_jump_addr;
@@ -70,6 +71,7 @@ module core_top #(
 
     // ctrls
     wire [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl, wb_ctrl;
+    wire data_hazard, control_hazard;
     wire [1:0] fw_rs1, fw_rs2;
 
     hazard_ctrl #(
@@ -86,6 +88,7 @@ module core_top #(
         .ex_re_dmem(ex_re_dmem),
 
         .ex_jump_type(ex_jump_type),
+        .if_pc(if_pc),
         .id_pc(id_pc),
         .ex_pc(ex_pc),
         .ex_npc(ex_npc),
@@ -95,7 +98,10 @@ module core_top #(
         .id_ctrl (id_ctrl ),
         .ex_ctrl (ex_ctrl ),
         .mem_ctrl(mem_ctrl),
-        .wb_ctrl (wb_ctrl )
+        .wb_ctrl (wb_ctrl ),
+
+        .data_hazard(data_hazard),
+        .control_hazard(control_hazard)
     );
 
     forwarding_uint #(
@@ -121,8 +127,12 @@ module core_top #(
         .DWIDTH(DWIDTH)
     ) branch_predictor_inst(
         .clk(clk),
+        .rst(rst),
+        .control_hazard(control_hazard),
         .if_pc(if_pc),
         .if_instr(if_instr),
+        .ex_pc(ex_pc),
+        .ex_jpc(ex_jpc),
         .if_npc(if_npc)
     );
 
@@ -212,20 +222,27 @@ module core_top #(
     `PIPE(clk, ex_ctrl, ex_rs2_pre   , id_rs2        );
 
     assign ex_pc4 = ex_pc + 4;
+    always @(posedge clk) begin
+        ex_jpc_saved <= ex_ctrl == C_FLUSH;
+        ex_jpc_prev <= ex_jpc;
+    end
     always @(*) begin
-        casez (ex_jump_type)
-            J_TYPE_NOP:
-                ex_jpc = ex_pc4;
-            J_TYPE_BEQ:
-                ex_jpc = ex_pc4 + (ex_rs == ex_rt ? ex_imm * 4 : 0);
-            J_TYPE_JAL,
-            J_TYPE_J:
-                ex_jpc = { ex_pc4[31:28], ex_jump_addr, 2'h0 };
-            J_TYPE_JR:
-                ex_jpc = ex_rs;
-            default:
-                ex_jpc = ex_pc4;
-        endcase
+        if (ex_jpc_saved)
+            ex_jpc = ex_jpc_prev;
+        else
+            casez (ex_jump_type)
+                J_TYPE_NOP:
+                    ex_jpc = ex_pc4;
+                J_TYPE_BEQ:
+                    ex_jpc = ex_pc4 + (ex_rs == ex_rt ? ex_imm * 4 : 0);
+                J_TYPE_JAL,
+                J_TYPE_J:
+                    ex_jpc = { ex_pc4[31:28], ex_jump_addr, 2'h0 };
+                J_TYPE_JR:
+                    ex_jpc = ex_rs;
+                default:
+                    ex_jpc = ex_pc4;
+            endcase
     end
 
     always @(*) begin
