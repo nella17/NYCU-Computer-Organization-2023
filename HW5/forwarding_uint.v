@@ -6,11 +6,7 @@ module forwarding_uint #(
     input  [DWIDTH-1:0] mem_rdst, wb_rdst,
     output reg [1:0] fw_rs1, fw_rs2
 );
-
-    // fw type
-    localparam [1:0] FW_EX  = 2'b00,
-                     FW_MEM = 2'b01,
-                     FW_WB  = 2'b10;
+    import common::*;
 
     always @(*) begin
         if (ex_rs1_id == 0)

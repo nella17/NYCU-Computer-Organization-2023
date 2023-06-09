@@ -9,30 +9,13 @@
     end
 
 module core_top #(
+    parameter MEM_SIZE = 64,
     parameter DWIDTH = 32
 )(
     input                 clk,
     input                 rst
 );
-
-
-    // hazard type
-    localparam [1:0] C_PIPE  = 2'b00,
-                     C_FLUSH = 2'b10,
-                     C_STALL = 2'b01,
-                     C_JUMP  = 2'b11;
-    // Jump type
-    localparam [2:0] J_TYPE_NOP = 3'b000,
-                     J_TYPE_BEQ = 3'b001,
-                     J_TYPE_JAL = 3'b010,
-                     J_TYPE_JR  = 3'b011,
-                     J_TYPE_J   = 3'b100;
-    // fw type
-    localparam [1:0] FW_EX  = 2'b00,
-                     FW_MEM = 2'b01,
-                     FW_WB  = 2'b10;
-
-    localparam integer MEM_SIZE = 64;
+    import common::*;
 
     // IF imem
     reg  [DWIDTH-1:0] if_pc;

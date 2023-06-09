@@ -8,18 +8,7 @@ module hazard_ctrl #(
     input  [DWIDTH-1:0] id_pc, ex_jpc,
     output reg [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl, wb_ctrl
 );
-
-    // hazard type
-    localparam [1:0] C_PIPE  = 2'b00,
-                     C_FLUSH = 2'b10,
-                     C_STALL = 2'b01,
-                     C_JUMP  = 2'b11;
-    // Jump type
-    localparam [2:0] J_TYPE_NOP = 3'b000,
-                     J_TYPE_BEQ = 3'b001,
-                     J_TYPE_JAL = 3'b010,
-                     J_TYPE_JR  = 3'b011,
-                     J_TYPE_J   = 3'b100;
+    import common::*;
 
     wire data_hazard = 
             id_rs1_id != 0 && ex_re_dmem && id_rs1_id == ex_rdst_id ||

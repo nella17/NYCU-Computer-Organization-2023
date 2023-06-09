@@ -1,4 +1,4 @@
-SRC = hw4_tb.v alu.v decode.v dmem.v imem.v reg_file.v hazard_ctrl.v
+SRC = hw4_tb.v common.v alu.v decode.v dmem.v imem.v reg_file.v hazard_ctrl.v
 OUT = Vhw3_tb
 
 all:
@@ -10,7 +10,7 @@ run: clean all
 	clear
 	./$(OUT)
 
-TESTSRC = hw3_tb.v alu.v decode.v dmem.v imem.v reg_file.v hazard_ctrl.v
+TESTSRC = hw3_tb.v common.v alu.v decode.v dmem.v imem.v reg_file.v hazard_ctrl.v
 TESTOUT = Vhw3_tb
 
 test-build: clean
