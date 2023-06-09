@@ -16,6 +16,7 @@ module core_top #(
 );
 
 
+    // hazard type
     localparam [1:0] C_PIPE  = 2'b00,
                      C_FLUSH = 2'b10,
                      C_STALL = 2'b01,
@@ -44,7 +45,7 @@ module core_top #(
     // ID decode
     wire [2:0] id_jump_type;
     wire [DWIDTH-7:0] id_jump_addr;
-    wire id_we_regfile, id_we_dmem, id_sel_dmem, id_ssel;
+    wire id_we_regfile, id_we_dmem, id_re_dmem, id_ssel;
     wire [3:0] id_op;
     wire [DWIDTH-1:0] id_imm;
     wire [4:0] id_rs1_id, id_rs2_id, id_rdst_id;
@@ -55,7 +56,7 @@ module core_top #(
     reg  [DWIDTH-1:0] ex_pc, ex_npc, ex_jpc;
     reg  [2:0] ex_jump_type;
     reg  [DWIDTH-7:0] ex_jump_addr;
-    reg  ex_we_regfile, ex_we_dmem, ex_sel_dmem, ex_ssel;
+    reg  ex_we_regfile, ex_we_dmem, ex_re_dmem, ex_ssel;
     reg  [3:0] ex_op;
     reg  [DWIDTH-1:0] ex_imm;
     reg  [4:0] ex_rs1_id, ex_rs2_id, ex_rdst_id;
@@ -66,7 +67,8 @@ module core_top #(
     wire ex_zero, ex_overflow;
 
     // MEM
-    reg  mem_we_regfile, mem_we_dmem, mem_sel_dmem;
+    reg  [DWIDTH-1:0] mem_pc;
+    reg  mem_we_regfile, mem_we_dmem, mem_re_dmem;
     reg  [4:0] mem_rdst_id;
     reg  [DWIDTH-1:0] mem_rs2;
     reg  [DWIDTH-1:0] mem_rd;
@@ -76,12 +78,13 @@ module core_top #(
     wire [DWIDTH-1:0] mem_rdst;
 
     // WB
+    reg  [DWIDTH-1:0] wb_pc;
     reg  wb_we_regfile;
     reg  [4:0] wb_rdst_id;
     reg  [DWIDTH-1:0] wb_rdst;
 
     // ctrls
-    wire [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl;
+    wire [1:0] if_ctrl, id_ctrl, ex_ctrl, mem_ctrl, wb_ctrl;
     wire [1:0] fw_rs1, fw_rs2;
 
     hazard_ctrl hazard_ctrl_inst(
@@ -93,6 +96,8 @@ module core_top #(
         .mem_rdst_id(mem_rdst_id),
         .wb_rdst_id (wb_rdst_id ),
 
+        .ex_re_dmem(ex_re_dmem),
+
         .ex_jump_type(ex_jump_type),
         .id_pc(id_pc),
         .ex_jpc(ex_jpc),
@@ -100,7 +105,8 @@ module core_top #(
         .if_ctrl (if_ctrl ),
         .id_ctrl (id_ctrl ),
         .ex_ctrl (ex_ctrl ),
-        .mem_ctrl(mem_ctrl)
+        .mem_ctrl(mem_ctrl),
+        .wb_ctrl (wb_ctrl )
     );
 
     forwarding_uint forwarding_uint_inst(
@@ -156,7 +162,7 @@ module core_top #(
         .jump_addr(id_jump_addr),
         .we_regfile(id_we_regfile),
         .we_dmem(id_we_dmem),
-        .sel_dmem(id_sel_dmem),
+        .re_dmem(id_re_dmem),
 
         .op(id_op),
         .ssel(id_ssel),
@@ -174,9 +180,9 @@ module core_top #(
         .rs1_id(id_rs1_id),
         .rs2_id(id_rs2_id),
 
-        .we(wb_we_regfile),
-        .rdst_id(wb_rdst_id),
-        .rdst(wb_rdst),
+        .we(mem_we_regfile),
+        .rdst_id(mem_rdst_id),
+        .rdst(mem_rdst),
 
         // output 
         .rs1(id_rs1), // rs
@@ -189,7 +195,7 @@ module core_top #(
     `PIPE(clk, ex_ctrl, ex_jump_addr , id_jump_addr  );
     `PIPE(clk, ex_ctrl, ex_we_regfile, id_we_regfile );
     `PIPE(clk, ex_ctrl, ex_we_dmem   , id_we_dmem    );
-    `PIPE(clk, ex_ctrl, ex_sel_dmem  , id_sel_dmem   );
+    `PIPE(clk, ex_ctrl, ex_re_dmem   , id_re_dmem    );
     `PIPE(clk, ex_ctrl, ex_ssel      , id_ssel       );
     `PIPE(clk, ex_ctrl, ex_op        , id_op         );
     `PIPE(clk, ex_ctrl, ex_imm       , id_imm        );
@@ -239,7 +245,7 @@ module core_top #(
         else if (~ex_ssel && ex_jump_type != J_TYPE_BEQ)
             ex_rt = ex_imm;
         else
-            casez (fw_rs1)
+            casez (fw_rs2)
                 FW_EX:
                     ex_rt = ex_rs2;
                 FW_MEM:
@@ -263,14 +269,15 @@ module core_top #(
         .overflow(ex_overflow)
     );
 
+    `PIPE(clk, mem_ctrl, mem_pc        , ex_pc         );
     `PIPE(clk, mem_ctrl, mem_we_regfile, ex_we_regfile );
     `PIPE(clk, mem_ctrl, mem_we_dmem   , ex_we_dmem    );
-    `PIPE(clk, mem_ctrl, mem_sel_dmem  , ex_sel_dmem   );
+    `PIPE(clk, mem_ctrl, mem_re_dmem   , ex_re_dmem    );
     `PIPE(clk, mem_ctrl, mem_rdst_id   , ex_rdst_id    );
     `PIPE(clk, mem_ctrl, mem_rs2       , ex_rs2        );
     `PIPE(clk, mem_ctrl, mem_rd        , ex_rd         );
 
-    assign mem_rdst = ~mem_sel_dmem ? mem_rdata : mem_rd;
+    assign mem_rdst = mem_re_dmem ? mem_rdata : mem_rd;
     assign mem_wdata = mem_rs2;
 
     // Dmem
@@ -284,8 +291,9 @@ module core_top #(
         .rdata(mem_rdata)
     );
 
-    assign wb_we_regfile    = mem_we_regfile;
-    assign wb_rdst_id       = mem_rdst_id;
-    assign wb_rdst          = mem_rdst;
+    `PIPE(clk, wb_ctrl, wb_pc        , mem_pc        );
+    `PIPE(clk, wb_ctrl, wb_we_regfile, mem_we_regfile);
+    `PIPE(clk, wb_ctrl, wb_rdst_id   , mem_rdst_id   );
+    `PIPE(clk, wb_ctrl, wb_rdst      , mem_rdst      );
 
 endmodule

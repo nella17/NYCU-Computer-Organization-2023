@@ -5,8 +5,7 @@ module decode #(parameter DWIDTH = 32)
     output reg [2 : 0]      jump_type,
     output reg [DWIDTH-7:0] jump_addr,
     output reg we_regfile,
-    output reg we_dmem,
-    output reg sel_dmem,
+    output reg we_dmem, re_dmem,
 
     output reg [3 : 0]      op,      // Operation code for the ALU.
     output reg              ssel,    // Select the signal for either the immediate value or rs2.
@@ -162,10 +161,9 @@ module decode #(parameter DWIDTH = 32)
 
     always @ (*) begin
         casez (opcode)
-            OPCODE_LW ,
-            OPCODE_SW :
-                        sel_dmem = 0;
-            default:    sel_dmem = 1;
+            OPCODE_LW:
+                        re_dmem = 1;
+            default:    re_dmem = 0;
         endcase
     end
 

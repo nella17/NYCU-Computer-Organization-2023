@@ -137,7 +137,7 @@ int main(int argc, char* const argv[]) {
                     uint32_t val, golden;
                     dut->hw3_tb->read_dmem(k, val);
                     dut->hw3_tb->read_golden_dmem(k, golden);
-                    printf("  dmem %02d fail: %d (%d)\n", k, val, golden);
+                    printf("  dmem %02d fail: %d (%d)\n", k * 4, val, golden);
                 }
             }
         }
