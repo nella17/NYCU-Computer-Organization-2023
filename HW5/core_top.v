@@ -27,6 +27,8 @@ module core_top #(
                      J_TYPE_JR  = 3'b011,
                      J_TYPE_J   = 3'b100;
 
+    localparam integer MEM_SIZE = 64;
+
     // IF imem
     reg  [DWIDTH-1:0] if_pc;
     wire [DWIDTH-1:0] if_npc;
@@ -111,7 +113,9 @@ module core_top #(
         endcase
     end
 
-    imem imem_inst(
+    imem #(
+        .SIZE(MEM_SIZE)
+    ) imem_inst(
         .addr(if_pc),
         .rdata(if_instr)
     );
@@ -215,7 +219,9 @@ module core_top #(
     assign mem_wdata = mem_rs2;
 
     // Dmem
-    dmem dmem_inst (
+    dmem #(
+        .SIZE(MEM_SIZE)
+    ) dmem_inst (
         .clk(clk),
         .addr(mem_rd),
         .we(mem_we_dmem),
