@@ -835,25 +835,26 @@
 
 [Pattern 10 : Test all]
 
-    End at cycle 17
+    End at cycle 53 ~ 56 (pipeline)
 
-    20080004 0x00 : addi $t0, $zero, 4
-    20090010 0x04 : addi $t1, $zero, 16
+    0x20080004  0x00 :  addi $t0, $zero, 4
+    0x20090010  0x04 :  addi $t1, $zero, 16
+    0x200a0000  0x08 :  addi $t2, $zero, 0
+    0x200b0001  0x0C :  addi $t3, $zero, 1
     first:
-    8d080000 0x08 : lw $t0, 0($t0)
-    21080004 0x0c : addi $t0, $t0, 4
-    ad080000 0x10 : sw $t0, 0($t0)
-    11090001 0x14 : beq $t0, $t1, final
-    0c000002 0x18 : jal first
+    0x8d080000  0x10 :  lw $t0, 0($t0)
+    0x21080004  0x14 :  addi $t0, $t0, 4
+    0xad080000  0x18 :  sw $t0, 0($t0)
+    0x11090001  0x1C :  beq $t0, $t1, last
+    0x0c000004  0x20 :  jal first
+    last:
+    0x114b0004  0x24 :  beq $t2, $t3, final
+    0x20080004  0x28 :  addi $t0, $zero, 4
+    0x20090010  0x2C :  addi $t1, $zero, 16
+    0x200a0001  0x30 :  addi $t2, $zero, 1
+    0x0c000004  0x34 :  jal first
     final:
-    08000007 0x1c : j final
-    0x20 :
-    0x24 :
-    0x28 :
-    0x2c :
-    0x30 :
-    0x34 :
-    0x38 :
+    0x0800000e  0x38 :  j final
     0x3c :
 
 
@@ -886,8 +887,8 @@
     x7 : 0
     x8 : 16
     x9 : 16
-    x10: 0
-    x11: 0
+    x10: 1
+    x11: 1
     x12: 0
     x13: 0
     x14: 0
@@ -907,12 +908,12 @@
     x28: 0
     x29: 0
     x30: 0
-    x31: 28
+    x31: 36
 
     [dmem_ans]
     0x00 : 0
-    0x04 : 8
-    0x08 : 30
+    0x04 : 4
+    0x08 : 8
     0x0c : 12
     0x10 : 16
     0x14 : 60
