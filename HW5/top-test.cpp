@@ -82,6 +82,10 @@ int main(int argc, char* const argv[]) {
         }
 
         // read file - final register file
+        fs.unsetf(std::ios::dec);
+        fs.unsetf(std::ios::hex);
+        fs.unsetf(std::ios::oct);
+
         for (int k = 0; k < 32; k++) {
             unsigned int temp;
             fs >> temp;

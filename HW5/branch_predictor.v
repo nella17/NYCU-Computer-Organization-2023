@@ -45,47 +45,50 @@ module branch_predictor #(
     wire [$clog2(SIZE)-1:0] if_idx = if_pc[$clog2(SIZE)+1:2];
     wire [$clog2(SIZE)-1:0] ex_idx = ex_pc[$clog2(SIZE)+1:2];
 
-    reg [DWIDTH-1:0] target;
+    wire [DWIDTH-1:0] target = TARGET[if_idx];
+    wire predict = PREDICT[if_idx];
+    wire init = INIT[if_idx];
+
+    reg [DWIDTH-1:0] npc;
     always @(*) begin
-        if (~INIT[if_idx])
+        if (~init)
             casez (jump_type)
                 J_TYPE_NOP:
-                    target = if_pc4;
+                    npc = if_pc4;
                 J_TYPE_BEQ:
-                    target = if_pc4 + immediate * 4;
+                    npc = if_pc4 + immediate * 4;
                 J_TYPE_J:
-                    target = { if_pc4[31:28], address, 2'h0 };
+                    npc = { if_pc4[31:28], address, 2'h0 };
                 default:
-                    target = if_pc4;
+                    npc = if_pc4;
             endcase
         else
-            target = TARGET[if_idx];
+            npc = target;
     end
 
-    wire predict = PREDICT[if_idx];
     always @(*) begin
         if (predict)
-            if_npc = target;
+            if_npc = npc;
         else
             if_npc = if_pc4;
     end
 
     always @(negedge clk) begin
         if (control_hazard)
-            PREDICT[ex_idx] <= ex_jpc == ex_pc + 4;
+            PREDICT[ex_idx] <= ex_jpc != ex_pc + 4;
         else if (jump_type == J_TYPE_J)
             PREDICT[if_idx] <= 1;
-        else if (~INIT[if_idx])
-            PREDICT[if_idx] <= target == if_pc4;
+        else if (~init)
+            PREDICT[if_idx] <= npc == if_pc4;
     end
 
     always @(posedge clk) begin
         if (control_hazard) begin
             INIT[ex_idx] <= 1;
             TARGET[ex_idx] <= ex_jpc;
-        end else begin
+        end else if (~init) begin
             INIT[if_idx] <= 1;
-            TARGET[if_idx] <= target;
+            TARGET[if_idx] <= npc;
         end
     end
 

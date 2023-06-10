@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.107 (w)1999-2020 BSI
-[*] Sat Jun 10 02:51:05 2023
+[*] Sat Jun 10 03:26:01 2023
 [*]
 [dumpfile] "waveform.vcd"
-[dumpfile_mtime] "Sat Jun 10 02:49:25 2023"
-[dumpfile_size] 37104
+[dumpfile_mtime] "Sat Jun 10 03:24:20 2023"
+[dumpfile_size] 93338
 [savefile] "waveform.gtkw"
-[timestart] 36
+[timestart] 133
 [size] 1344 600
 [pos] -1 -1
-*-2.520657 46 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.526246 133 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] dut.
 [treeopen] dut.hw3_tb.
 [treeopen] dut.hw3_tb.core_top_inst.
@@ -28,10 +28,38 @@ dut.hw3_tb.core_top_inst.if_instr[31:0]
 dut.hw3_tb.core_top_inst.hazard_ctrl_inst.control_hazard
 dut.hw3_tb.core_top_inst.hazard_ctrl_inst.data_hazard
 dut.hw3_tb.core_top_inst.branch_predictor_inst.predict
+dut.hw3_tb.core_top_inst.branch_predictor_inst.init
 dut.hw3_tb.core_top_inst.branch_predictor_inst.jump_type[2:0]
 @22
 dut.hw3_tb.core_top_inst.branch_predictor_inst.address[25:0]
 dut.hw3_tb.core_top_inst.branch_predictor_inst.target[31:0]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.if_idx[3:0]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.ex_idx[3:0]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.ex_jpc[31:0]
+@29
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[7]
+@c00022
+#{dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[0:9]} dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[0] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[10] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[11] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[12] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[13] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[14] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[15] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[1] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[2] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[3] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[4] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[5] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[6] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[7] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[8] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[9]
+@28
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[0]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[10]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[11]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[12]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[13]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[14]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[15]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[1]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[2]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[3]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[4]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[5]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[6]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[8]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[9]
+@1401200
+-group_end
+@22
+dut.hw3_tb.core_top_inst.branch_predictor_inst.npc[31:0]
 dut.hw3_tb.core_top_inst.branch_predictor_inst.if_npc[31:0]
 @28
 dut.hw3_tb.core_top_inst.id_ctrl[1:0]
@@ -48,9 +76,8 @@ dut.hw3_tb.core_top_inst.id_rdst_id[4:0]
 dut.hw3_tb.core_top_inst.id_re_dmem
 dut.hw3_tb.core_top_inst.id_ssel
 dut.hw3_tb.core_top_inst.ex_ctrl[1:0]
-@23
-dut.hw3_tb.core_top_inst.ex_pc[31:0]
 @22
+dut.hw3_tb.core_top_inst.ex_pc[31:0]
 dut.hw3_tb.core_top_inst.ex_npc[31:0]
 dut.hw3_tb.core_top_inst.ex_jpc[31:0]
 @28
@@ -68,79 +95,6 @@ dut.hw3_tb.core_top_inst.ex_rs2_id[4:0]
 dut.hw3_tb.core_top_inst.ex_rs2[31:0]
 dut.hw3_tb.core_top_inst.ex_rdst_id[4:0]
 dut.hw3_tb.core_top_inst.ex_rd[31:0]
-@28
-dut.hw3_tb.core_top_inst.ex_we_regfile
-dut.hw3_tb.core_top_inst.ex_re_dmem
-dut.hw3_tb.core_top_inst.ex_ssel
-@22
-dut.hw3_tb.core_top_inst.mem_pc[31:0]
-@28
-dut.hw3_tb.core_top_inst.mem_re_dmem
-dut.hw3_tb.core_top_inst.mem_we_dmem
-dut.hw3_tb.core_top_inst.mem_we_regfile
-@22
-dut.hw3_tb.core_top_inst.mem_rs2[31:0]
-dut.hw3_tb.core_top_inst.mem_rd[31:0]
-dut.hw3_tb.core_top_inst.mem_rdst_id[4:0]
-dut.hw3_tb.core_top_inst.mem_rdst[31:0]
-dut.hw3_tb.core_top_inst.mem_wdata[31:0]
-dut.hw3_tb.core_top_inst.mem_rdata[31:0]
-dut.hw3_tb.core_top_inst.wb_pc[31:0]
-@28
-dut.hw3_tb.core_top_inst.wb_we_regfile
-@c00022
-dut.hw3_tb.core_top_inst.wb_rdst_id[4:0]
-@28
-(0)dut.hw3_tb.core_top_inst.wb_rdst_id[4:0]
-(1)dut.hw3_tb.core_top_inst.wb_rdst_id[4:0]
-(2)dut.hw3_tb.core_top_inst.wb_rdst_id[4:0]
-(3)dut.hw3_tb.core_top_inst.wb_rdst_id[4:0]
-(4)dut.hw3_tb.core_top_inst.wb_rdst_id[4:0]
-@1401200
--group_end
-@22
-dut.hw3_tb.core_top_inst.wb_rdst[31:0]
-@28
-dut.clk
-dut.hw3_tb.core_top_inst.rst
-dut.hw3_tb.core_top_inst.if_ctrl[1:0]
-@22
-dut.hw3_tb.core_top_inst.if_pc[31:0]
-dut.hw3_tb.core_top_inst.if_instr[31:0]
-@28
-dut.hw3_tb.core_top_inst.hazard_ctrl_inst.control_hazard
-dut.hw3_tb.core_top_inst.hazard_ctrl_inst.data_hazard
-dut.hw3_tb.core_top_inst.id_ctrl[1:0]
-@22
-dut.hw3_tb.core_top_inst.id_pc[31:0]
-dut.hw3_tb.core_top_inst.id_npc[31:0]
-dut.hw3_tb.core_top_inst.id_rs1_id[4:0]
-dut.hw3_tb.core_top_inst.id_rs2_id[4:0]
-@28
-dut.hw3_tb.core_top_inst.id_jump_type[2:0]
-@22
-dut.hw3_tb.core_top_inst.id_rdst_id[4:0]
-@28
-dut.hw3_tb.core_top_inst.id_re_dmem
-dut.hw3_tb.core_top_inst.id_ssel
-dut.hw3_tb.core_top_inst.ex_ctrl[1:0]
-@22
-dut.hw3_tb.core_top_inst.ex_pc[31:0]
-@28
-dut.hw3_tb.core_top_inst.ex_jump_type[2:0]
-@22
-dut.hw3_tb.core_top_inst.ex_npc[31:0]
-dut.hw3_tb.core_top_inst.ex_rs[31:0]
-dut.hw3_tb.core_top_inst.ex_rt[31:0]
-@28
-dut.hw3_tb.core_top_inst.fw_rs1[1:0]
-dut.hw3_tb.core_top_inst.fw_rs2[1:0]
-@22
-dut.hw3_tb.core_top_inst.ex_rs1_id[4:0]
-dut.hw3_tb.core_top_inst.ex_rs1[31:0]
-dut.hw3_tb.core_top_inst.ex_rs2_id[4:0]
-dut.hw3_tb.core_top_inst.ex_rs2[31:0]
-dut.hw3_tb.core_top_inst.ex_rdst_id[4:0]
 @28
 dut.hw3_tb.core_top_inst.ex_we_regfile
 dut.hw3_tb.core_top_inst.ex_re_dmem
