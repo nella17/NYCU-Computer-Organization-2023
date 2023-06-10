@@ -137,7 +137,7 @@ task check_pc;
     output val;
     begin
         val = core_top_inst.ex_pc != 0
-            && core_top_inst.ex_pc == core_top_inst.ex_npc
+            && core_top_inst.ex_pc == core_top_inst.ex_jpc
             && core_top_inst.ex_pc == core_top_inst.id_pc
             && core_top_inst.wb_pc == core_top_inst.ex_pc;
     end
