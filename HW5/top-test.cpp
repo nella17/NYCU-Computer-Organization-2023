@@ -123,6 +123,12 @@ int main(int argc, char* const argv[]) {
             m_trace->dump(sim_time);   // dump simulation result into vcd file.
             sim_time++;
 #endif
+            bool v;
+            dut->hw3_tb->check_pc(v);
+            if (v) {
+                printf("early finish at cycle %d\n", j / 2);
+                break;
+            }
         }
 
         // check answer

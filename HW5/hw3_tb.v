@@ -132,4 +132,15 @@ task read_golden_dmem;
     end
 endtask
 
+task check_pc;
+/* verilator public */
+    output val;
+    begin
+        val = core_top_inst.ex_pc != 0
+            && core_top_inst.ex_pc == core_top_inst.ex_npc
+            && core_top_inst.ex_pc == core_top_inst.id_pc
+            && core_top_inst.wb_pc == core_top_inst.ex_pc;
+    end
+endtask
+
 endmodule
