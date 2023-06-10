@@ -1,6 +1,6 @@
 [*]
 [*] GTKWave Analyzer v3.3.107 (w)1999-2020 BSI
-[*] Sat Jun 10 03:26:01 2023
+[*] Sat Jun 10 03:41:46 2023
 [*]
 [dumpfile] "waveform.vcd"
 [dumpfile_mtime] "Sat Jun 10 03:24:20 2023"
@@ -9,14 +9,14 @@
 [timestart] 133
 [size] 1344 600
 [pos] -1 -1
-*-2.526246 133 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.389859 657 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] dut.
 [treeopen] dut.hw3_tb.
 [treeopen] dut.hw3_tb.core_top_inst.
 [sst_width] 193
-[signals_width] 256
+[signals_width] 247
 [sst_expanded] 1
-[sst_vpaned_height] 167
+[sst_vpaned_height] 192
 @28
 dut.clk
 dut.hw3_tb.core_top_inst.rst
@@ -36,8 +36,7 @@ dut.hw3_tb.core_top_inst.branch_predictor_inst.target[31:0]
 dut.hw3_tb.core_top_inst.branch_predictor_inst.if_idx[3:0]
 dut.hw3_tb.core_top_inst.branch_predictor_inst.ex_idx[3:0]
 dut.hw3_tb.core_top_inst.branch_predictor_inst.ex_jpc[31:0]
-@29
-dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[7]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.INIT[15:0]
 @c00022
 #{dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[0:9]} dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[0] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[10] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[11] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[12] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[13] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[14] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[15] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[1] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[2] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[3] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[4] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[5] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[6] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[7] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[8] dut.hw3_tb.core_top_inst.branch_predictor_inst.PREDICT[9]
 @28

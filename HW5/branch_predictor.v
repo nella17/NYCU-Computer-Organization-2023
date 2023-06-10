@@ -30,16 +30,11 @@ module branch_predictor #(
     // FIXME: when SIZE tooo large
     reg [DWIDTH-1:0] TARGET [SIZE-1:0];
     reg PREDICT [SIZE-1:0];
-    reg INIT [SIZE-1:0];
+    reg [SIZE-1:0] INIT;
 
-    // FIXME: reset ?
-    integer i;
-    always @(posedge rst) begin
-        for (i = 0; i < SIZE; i = i+1) begin
-            TARGET[i] = i * 4 + 4;
-            PREDICT[i] = 1;
-            INIT[i] = 0;
-        end
+    always @(posedge clk) begin
+        if (rst)
+            INIT <= 0;
     end
 
     wire [$clog2(SIZE)-1:0] if_idx = if_pc[$clog2(SIZE)+1:2];
