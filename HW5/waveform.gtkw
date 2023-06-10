@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.107 (w)1999-2020 BSI
-[*] Fri Jun  9 21:48:55 2023
+[*] Sat Jun 10 02:51:05 2023
 [*]
 [dumpfile] "waveform.vcd"
-[dumpfile_mtime] "Fri Jun  9 21:42:21 2023"
-[dumpfile_size] 55771
+[dumpfile_mtime] "Sat Jun 10 02:49:25 2023"
+[dumpfile_size] 37104
 [savefile] "waveform.gtkw"
-[timestart] 46
+[timestart] 36
 [size] 1344 600
-[pos] 72 178
-*-3.810700 75 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-2.520657 46 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] dut.
 [treeopen] dut.hw3_tb.
 [treeopen] dut.hw3_tb.core_top_inst.
@@ -27,6 +27,13 @@ dut.hw3_tb.core_top_inst.if_instr[31:0]
 @28
 dut.hw3_tb.core_top_inst.hazard_ctrl_inst.control_hazard
 dut.hw3_tb.core_top_inst.hazard_ctrl_inst.data_hazard
+dut.hw3_tb.core_top_inst.branch_predictor_inst.predict
+dut.hw3_tb.core_top_inst.branch_predictor_inst.jump_type[2:0]
+@22
+dut.hw3_tb.core_top_inst.branch_predictor_inst.address[25:0]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.target[31:0]
+dut.hw3_tb.core_top_inst.branch_predictor_inst.if_npc[31:0]
+@28
 dut.hw3_tb.core_top_inst.id_ctrl[1:0]
 @22
 dut.hw3_tb.core_top_inst.id_pc[31:0]
@@ -41,10 +48,10 @@ dut.hw3_tb.core_top_inst.id_rdst_id[4:0]
 dut.hw3_tb.core_top_inst.id_re_dmem
 dut.hw3_tb.core_top_inst.id_ssel
 dut.hw3_tb.core_top_inst.ex_ctrl[1:0]
-@22
-dut.hw3_tb.core_top_inst.ex_pc[31:0]
-dut.hw3_tb.core_top_inst.ex_npc[31:0]
 @23
+dut.hw3_tb.core_top_inst.ex_pc[31:0]
+@22
+dut.hw3_tb.core_top_inst.ex_npc[31:0]
 dut.hw3_tb.core_top_inst.ex_jpc[31:0]
 @28
 dut.hw3_tb.core_top_inst.ex_jump_type[2:0]
